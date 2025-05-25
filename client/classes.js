@@ -21,7 +21,7 @@ class Character {
 class Bruiser extends Character {
     constructor(x, y, color, id) {
         super(x, y, color, id);
-        this.speed = 5; // Bruisers are slower
+        this.speed = 4; // Bruisers are slower
         this.type = "Bruiser";
     }
 }
