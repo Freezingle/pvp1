@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>GAME2D</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        
+        <div class="healthBar">
+         <!--player1 health bar-->
+        <div style="position:relative; width:100%; height:50px; display:flex; justify-content: flex-end;">  
+        <div class="player1Health"></div>
+        <div id="player1H" style="position:absolute; background-color: limegreen; top:0;bottom:0;right:0;left:0; width:100%"></div>
+        </div>
+
+        <div id="display">FIGHT!!</div>
+        
+        <!--player2 health bar-->
+        <div style="position:relative; height:50px; width:100%;">
+        <div class="player2Health"></div>
+        <div id="player2H" style="position:absolute; background:limegreen; top:0; right:0; left:0; bottom:0; width:100%;"> </div>
+    </div>
+        </div>
+        <div id="gameOver">
+            <div id="result">RESULT</div>
+            <button id="restartbtn">Restart</button>
+        </div>
+        <div id="characterSelectMenu" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.8); z-index: 10; flex-direction: column; color: white; font-family: Arial, sans-serif;">
+    
+    <h2 style="margin-bottom: 20px; font-size: 2rem;">Choose Your Character</h2>
+    
+    <button onclick="selectCharacter('bruiser')" style="padding: 12px 30px; font-size: 1.2rem; margin: 10px; background-color: crimson; color: white; border: none; border-radius: 10px; cursor: pointer;">Bruiser</button>
+    
+    <button onclick="selectCharacter('assassin')" style="padding: 12px 30px; font-size: 1.2rem; margin: 10px; background-color: purple; color: white; border: none; border-radius: 10px; cursor: pointer;">Assassin</button>
+</div>
+       <canvas></canvas>
+    </div>
+      <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+      <script src = "classes.js"></script>
+      <script src="index.js"></script>
+</body>
+</html>
