@@ -78,10 +78,7 @@ window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
 
 //tthis is going to shift to classes.js later or  maybe im just going tto call the method here !
 function update() {
-  if (keys['d']) player.x += 5;
-  if (keys["a"]) player.x -= 5;
-  if (keys["w"]) player.y -= 5;
-  if (keys["s"]) player.y += 5;
+ player.move(keys);
 
   // Send local player position to server
   socket.emit("playerUpdate", { roomId, x: player.x, y: player.y });
