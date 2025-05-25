@@ -24,13 +24,21 @@ const rooms = {};
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  socket.on("joinRoom", (roomId, player) => {
-    socket.join(roomId);
-    console.log(`${socket.id} joined room ${roomId}`);
+  
+socket.on("joinRoom", (roomId, player) => {
+  // Create room if not exists
+  if (!rooms[roomId]) rooms[roomId] = {};
 
-    // Create room if not exists
-    if (!rooms[roomId]) rooms[roomId] = {};
-    rooms[roomId][socket.id] = player; // initial position
+  // Check if room is full
+  if (Object.keys(rooms[roomId]).length >= 2) {
+    socket.emit("roomFull", "Room is full");
+    return;
+  }
+
+  socket.join(roomId);
+  console.log(`${socket.id} joined room ${roomId}`);
+
+  rooms[roomId][socket.id] = player;  // initial position
 
     // Send all players in room to this socket (except self)
     const otherPlayers = Object.entries(rooms[roomId])
