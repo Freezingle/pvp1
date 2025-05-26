@@ -114,10 +114,7 @@ function draw() {
 
   // update attack box position
   Object.values(otherPlayers).forEach(p => {
-    if(player.x > p.x + p.width )
-      player.attackBox.offsetDirection = -1; // left
-    else 
-    player.attackBox.offsetDirection = 1; // right
+    player.updateAttackDirection(p.x);
 });
 }
 
