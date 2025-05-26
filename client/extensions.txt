@@ -1,0 +1,49 @@
+ATTRIBUTE
+this.attackBoxes = {
+    punch: {
+        width: 50,
+        height: 30,
+        offsetX: this.width,
+        offsetY: 0,
+        duration: 1000
+    },
+    kick: {
+        width: 60,
+        height: 20,
+        offsetX: this.width,
+        offsetY: 30,
+        duration: 700
+    },
+    push: {
+        width: 40,
+        height: 40,
+        offsetX: this.width,
+        offsetY: 10,
+        duration: 600
+    }
+};
+this.currentAttack = null;
+this.attackStartTime = 0;
+
+ ATTACK METHOD
+attack(ctx, type = "punch") {
+    if (this.isAttacking || !this.attackBoxes[type]) return;
+
+    this.isAttacking = true;
+    this.currentAttack = type;
+    const attackData = this.attackBoxes[type];
+
+    // Adjust attack direction
+    this.attackBox.width = attackData.width;
+    this.attackBox.height = attackData.height;
+    this.attackBox.offsetX = this.facingDirection === 1 ? attackData.offsetX : -attackData.width;
+    this.attackBox.offsetY = attackData.offsetY;
+
+    console.log(`${this.type} uses ${type}!`);
+
+    setTimeout(() => {
+        this.isAttacking = false;
+        this.currentAttack = null;
+        console.log(`${type} attack ended`);
+    }, attackData.duration);
+}
