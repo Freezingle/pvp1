@@ -9,6 +9,29 @@ const roomId = "room1"; // static for demo
 let player = null;
 let enableAttack = false;
 
+
+function generateFramePath (folderPath, frameCount, filePrefix = "frame", extension = "png") {
+  const frames = [];
+  for (let i = 1; i <= frameCount; i++) {
+    frames.push(`${folderPath}/${filePrefix}${i}.${extension}`);
+  }
+  return frames;
+}
+
+function isColliding(rect1, rect2) {
+  return (
+    rect1.x < rect2.x + rect2.width &&
+    rect1.x + rect1.width > rect2.x &&
+    rect1.y < rect2.y + rect2.height &&
+    rect1.y + rect1.height > rect2.y
+  );
+}
+
+const bgImagePaths  = generateFramePath("assets/background/asian1",20);
+
+   const background = new BackgroundSprite(bgImagePaths,100,canvas.width,canvas.height); 
+
+
 function selectCharacter(type)
 {
   const menu = document.getElementById("characterSelectMenu");
@@ -21,6 +44,7 @@ function selectCharacter(type)
     {
        player = new Assassin  (0,0, "red", 40, 120, socket.id);
     }
+ 
     startGame();
 
 }
@@ -29,6 +53,14 @@ function selectCharacter(type)
 // Local player state
 //const player = { x: 50, y: 300, color: "blue", id: null };
 const otherPlayers = {}; // id -> {x, y, color}
+
+socket.on("gotHit", ({ attackerId }) => {
+  console.log("You got hit by", attackerId);
+});
+
+socket.on("hitSuccess", ({ targetId }) => {
+  console.log("You hit player2 with ID:", targetId);
+});
 
 function startGame (){
   socket.emit("joinRoom", roomId,
@@ -50,13 +82,13 @@ function startGame (){
 // Receive current players already in room
 socket.on("currentPlayers", (players) => {
   players.forEach(p => {
-    otherPlayers[p.id] = { x: p.x, y: p.y, width:p.width, height:p.height, color: p.color };
+    otherPlayers[p.id] = {id: p.id, x: p.x, y: p.y, width:p.width, height:p.height, color: p.color };
   });
 });
 
 // New player joined
 socket.on("newPlayer", (p) => {
-  otherPlayers[p.id] = { x: p.x, y: p.y, width: p.width, height: p.height, color:p.color };
+  otherPlayers[p.id] = { id:p.id, x: p.x, y: p.y, width: p.width, height: p.height, color:p.color };
 });
 
 
@@ -65,8 +97,7 @@ socket.on("opponentMove", (p) => {
   if (otherPlayers[p.id]) {
     otherPlayers[p.id].x = p.x;
     otherPlayers[p.id].y = p.y;
-    console.log("im inside opponent move");
-    console.log(`Opponent ${otherPlayers[p.id].width}`);
+    
   }
 });
 
@@ -74,6 +105,7 @@ socket.on("opponentMove", (p) => {
 socket.on("playerLeft", (id) => {
   delete otherPlayers[id];
 });
+
 
 loop();
 
@@ -88,20 +120,38 @@ window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
 window.addEventListener("mousedown", (e)=>{ if( e.button === 0) {enableAttack = true;}}); //leftclick
 
 
-//tthis is going to shift to classes.js later or  maybe im just going tto call the method here !
 function update() {
- player.move(keys);
+  player.move(keys);
   if (enableAttack) {
     player.attack(ctx);
+    const atkBox = {
+      x: player.attackBox.position.x + player.attackBox.offsetX,
+      y: player.attackBox.position.y + player.attackBox.offsetY,
+      width: player.attackBox.width,
+      height: player.attackBox.height
+    };
+    Object.values(otherPlayers).forEach(opponent => {
+      const opponentRect = {
+        id: opponent.id,
+        x: opponent.x,
+        y: opponent.y,
+        width: opponent.width,
+        height: opponent.height
+      };
+      if (isColliding(atkBox, opponentRect)) {
+        socket.emit("hitTaken", { targetId: opponent.id, roomId });
+      }
+    });
     enableAttack = false;  // reset attack state after attack
-    // reset attack state
   }
-  // Send local player position to server
   socket.emit("playerUpdate", { roomId, x: player.x, y: player.y });
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  //background drawing
+  background.draw(ctx, performance.now());
 
   // Draw local player (with attack box if attacking)
   player.draw(ctx);
@@ -123,4 +173,5 @@ function loop() {
   draw();
   requestAnimationFrame(loop);
 }
+
 
