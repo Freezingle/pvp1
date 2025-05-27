@@ -59,9 +59,19 @@ socket.on("joinRoom", (roomId, player) => {
       rooms[roomId][socket.id].y = y;
 
       // Broadcast updated position to others
-      socket.to(roomId).emit("opponentMove", { id: socket.id, x, y });
+      io.to(roomId).emit("opponentMove", { id: socket.id, x, y });
     }
   });
+
+  socket.on("hitTaken", ({ targetId, roomId }) => {
+  console.log(`Hit taken by ${targetId}`);
+
+  // Notify the target that they got hit
+  socket.to(targetId).emit("gotHit", { attackerId: socket.id });
+
+  // Also notify the attacker that their hit was successful
+  socket.emit("hitSuccess", { targetId });
+});
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
