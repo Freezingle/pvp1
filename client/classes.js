@@ -102,3 +102,33 @@ class Assassin extends Character {
     }, 500);
     }
 } 
+
+
+class  BackgroundSprite {
+  constructor(imagePaths, frameDelay, canvasWidth, canvasHeight)
+  {
+    this.frames=  [];
+    this.currentFrame = 0;
+    this.frameDelay = frameDelay;
+    this.lastFrameTime = 0;
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
+
+    //load frames
+    imagePaths.forEach((path)=>{
+        const img = new Image();
+        img.src = path;
+        this.frames.push(img);
+    })
+  }
+  draw (ctx,timestamp)
+  {
+    if(timestamp -this.lastFrameTime > this.frameDelay)
+    {
+        this.currentFrame = (this.currentFrame + 1) % this.frames.length;
+        this.lastFrameTime = timestamp;
+    }
+    const  frame = this.frames[this.currentFrame];
+    ctx.drawImage(frame, 0, 0, this.canvasWidth, this.canvasHeight);
+  }
+}
