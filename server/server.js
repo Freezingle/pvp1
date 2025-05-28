@@ -63,15 +63,27 @@ socket.on("joinRoom", (roomId, player) => {
     }
   });
 
-  socket.on("hitTaken", ({ targetId, roomId }) => {
+  socket.on("hitTaken", ({ targetId, roomId,attackPower }) => {
   console.log(`Hit taken by ${targetId}`);
 
   // Notify the target that they got hit
-  socket.to(targetId).emit("gotHit", { attackerId: socket.id });
+  socket.to(targetId).emit("gotHit", { attackerId: socket.id, attackPower });
 
   // Also notify the attacker that their hit was successful
   socket.emit("hitSuccess", { targetId });
 });
+
+socket.on("playerDefeated", ({ roomId, defeatedId, winnerId }) => {
+  console.log(`Player ${defeatedId} defeated by ${winnerId} in room ${roomId}`);
+
+  // Notify all players in the room about the defeat
+  io.to(roomId).emit("gameOver", { defeatedId, winnerId });
+
+  // Optionally, you can remove the defeated player from the room
+  if (rooms[roomId]) {
+    delete rooms[roomId][defeatedId];
+  }
+})
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
