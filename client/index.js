@@ -8,6 +8,7 @@ const roomId = "room1"; // static for demo
 
 let player = null;
 let enableAttack = false;
+let gameEnded = false;
 
 
 function generateFramePath (folderPath, frameCount, filePrefix = "frame", extension = "png") {
@@ -54,13 +55,7 @@ function selectCharacter(type)
 //const player = { x: 50, y: 300, color: "blue", id: null };
 const otherPlayers = {}; // id -> {x, y, color}
 
-socket.on("gotHit", ({ attackerId }) => {
-  console.log("You got hit by", attackerId);
-});
 
-socket.on("hitSuccess", ({ targetId }) => {
-  console.log("You hit player2 with ID:", targetId);
-});
 
 function startGame (){
   socket.emit("joinRoom", roomId,
@@ -70,7 +65,8 @@ function startGame (){
       y:player.y,
       width: player.width,
       height: player.height,
-      
+      attackPower: player.attackPower,
+      hitPoints: player.hitPoints,
       color: player.color
     }
   );
@@ -82,13 +78,13 @@ function startGame (){
 // Receive current players already in room
 socket.on("currentPlayers", (players) => {
   players.forEach(p => {
-    otherPlayers[p.id] = {id: p.id, x: p.x, y: p.y, width:p.width, height:p.height, color: p.color };
+    otherPlayers[p.id] = {id: p.id, x: p.x, y: p.y, width:p.width, height:p.height, color: p.color, attackPower: p.attackPower, hitPoints: p.hitPoints };
   });
 });
 
 // New player joined
 socket.on("newPlayer", (p) => {
-  otherPlayers[p.id] = { id:p.id, x: p.x, y: p.y, width: p.width, height: p.height, color:p.color };
+  otherPlayers[p.id] = { id:p.id, x: p.x, y: p.y, width: p.width, height: p.height, color:p.color, attackPower: p.attackPower, hitPoints: p.hitPoints };
 });
 
 
@@ -101,9 +97,31 @@ socket.on("opponentMove", (p) => {
   }
 });
 
+socket.on("gameOver", ({ defeatedId, winnerId }) => {
+ 
+  if (socket.id === winnerId) {
+    alert("🎉 You Win!");
+  } else {
+    alert("💀 You Lose!");
+  }
+  gameEnded= true;
+
+})
+
 // Player left
 socket.on("playerLeft", (id) => {
   delete otherPlayers[id];
+});
+
+socket.on("gotHit", ({ attackPower, attackerId }) => {
+  console.log("You got hit by", attackerId);
+
+  //call the gothit method here 
+  player.gotHit(attackPower, attackerId);
+});
+
+socket.on("hitSuccess", ({ targetId }) => {
+  console.log("You hit player2 with ID:", targetId);
 });
 
 
@@ -115,12 +133,14 @@ loop();
 // Control keys for moving local player
 const keys = {};
 //event listeners for keydown and keyup
-window.addEventListener("keydown", (e) => keys[e.key.toLowerCase()] = true);
+window.addEventListener("keydown", (e) =>{if(gameEnded) return; keys[e.key.toLowerCase()] = true});
 window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
-window.addEventListener("mousedown", (e)=>{ if( e.button === 0) {enableAttack = true;}}); //leftclick
+window.addEventListener("mousedown", (e)=>{ if( e.button === 0 && !gameEnded ) {enableAttack = true;}}); //leftclick
 
 
 function update() {
+
+  if (gameEnded) return; 
   player.move(keys);
   if (enableAttack) {
     player.attack(ctx);
@@ -130,6 +150,8 @@ function update() {
       width: player.attackBox.width,
       height: player.attackBox.height
     };
+    //for drrwing atk box in enemy side emit here
+
     Object.values(otherPlayers).forEach(opponent => {
       const opponentRect = {
         id: opponent.id,
@@ -139,7 +161,7 @@ function update() {
         height: opponent.height
       };
       if (isColliding(atkBox, opponentRect)) {
-        socket.emit("hitTaken", { targetId: opponent.id, roomId });
+        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.attackPower });
       }
     });
     enableAttack = false;  // reset attack state after attack
