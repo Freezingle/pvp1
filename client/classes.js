@@ -8,6 +8,7 @@ class Character {
         this.id = id;
         this.isAttacking = false;
         this.facingDirection = 1; // 1 = right, -1 = left
+        this.hitPoints= 100; // Default hit points
 
         this.attackBox = {
             position: { x: this.x, y: this.y },
@@ -41,6 +42,19 @@ class Character {
         }
     }
 
+    gotHit(damage,attackerId) {
+        this.hitPoints -= damage;
+        console.log(`Character ${this.id} got hit by ${attackerId}. Remaining HP: ${this.hitPoints}`);
+        if (this.hitPoints <= 0) {
+            console.log(`Character ${this.id} has been defeated!`);
+
+            //defeat sprite here
+
+            //notifying the server about defeat
+            socket.emit("playerDefeated", {roomId, defeatedId: this.id, winnerId: attackerId})
+        }
+    }
+
     move(keys) {
         if (keys['d']) this.x += this.speed;
         if (keys['a']) this.x -= this.speed;
@@ -59,6 +73,7 @@ class Bruiser extends Character {
         this.type = "Bruiser";
         this.attackBox.width = 50; // Wider attack box
         this.attackBox.height = 30; // Taller attack box
+        this.attackPower = 20; // Higher attack power
     }
     attack (ctx){
         if (this.isAttacking) return; // Prevent multiple attacks at once
@@ -86,6 +101,7 @@ class Assassin extends Character {
         this.attackBox.width = 25; // Narrower attack box
         this.attackBox.height = 14;
         this.attackBox.offsetY =20;
+        this.attackPower = 10; // Moderate attack power
     }
     attack(ctx) {
         if (this.isAttacking) return; // Prevent multiple attacks at once
