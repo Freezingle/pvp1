@@ -144,26 +144,10 @@ function update() {
   player.move(keys);
   if (enableAttack) {
     player.attack(ctx);
-    const atkBox = {
-      x: player.attackBox.position.x + player.attackBox.offsetX,
-      y: player.attackBox.position.y + player.attackBox.offsetY,
-      width: player.attackBox.width,
-      height: player.attackBox.height
-    };
+   
     //for drrwing atk box in enemy side emit here
 
-    Object.values(otherPlayers).forEach(opponent => {
-      const opponentRect = {
-        id: opponent.id,
-        x: opponent.x,
-        y: opponent.y,
-        width: opponent.width,
-        height: opponent.height
-      };
-      if (isColliding(atkBox, opponentRect)) {
-        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.attackPower });
-      }
-    });
+    
     enableAttack = false;  // reset attack state after attack
   }
   socket.emit("playerUpdate", { roomId, x: player.x, y: player.y });
