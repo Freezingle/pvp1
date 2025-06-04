@@ -78,6 +78,25 @@ class Bruiser extends Character {
     attack (ctx){
         if (this.isAttacking) return; // Prevent multiple attacks at once
         this.isAttacking = true;
+
+         const atkBox = {
+      x: player.attackBox.position.x + player.attackBox.offsetX,
+      y: player.attackBox.position.y + player.attackBox.offsetY,
+      width: player.attackBox.width,
+      height: player.attackBox.height
+    };
+    Object.values(otherPlayers).forEach(opponent => {
+      const opponentRect = {
+        id: opponent.id,
+        x: opponent.x,
+        y: opponent.y,
+        width: opponent.width,
+        height: opponent.height
+      };
+      if (isColliding(atkBox, opponentRect)) {
+        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.attackPower });
+      }
+    });
        
         console.log("Bruiser attacks with brute force!");
 
@@ -109,6 +128,24 @@ class Assassin extends Character {
         
         console.log("Assassin strikes swiftly!");
         //activate attack box here
+         const atkBox = {
+      x: player.attackBox.position.x + player.attackBox.offsetX,
+      y: player.attackBox.position.y + player.attackBox.offsetY,
+      width: player.attackBox.width,
+      height: player.attackBox.height
+    };
+    Object.values(otherPlayers).forEach(opponent => {
+      const opponentRect = {
+        id: opponent.id,
+        x: opponent.x,
+        y: opponent.y,
+        width: opponent.width,
+        height: opponent.height
+      };
+      if (isColliding(atkBox, opponentRect)) {
+        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.attackPower });
+      }
+    });
        
         setTimeout(() => {
       this.isAttacking = false;
