@@ -19,6 +19,13 @@ function generateFramePath (folderPath, frameCount, filePrefix = "frame", extens
   return frames;
 }
 
+function generateRandomSpawn(playerWidth, playerHeight){
+    const margin = 20; // Prevent spawning at the very edge
+  const x = Math.floor(Math.random() * (canvas.width - playerWidth - margin * 2)) + margin;
+  const y = Math.floor(Math.random() * (canvas.height - playerHeight - margin * 2)) + margin;
+  return { x, y };
+}
+
 function isColliding(rect1, rect2) {
   return (
     rect1.x < rect2.x + rect2.width &&
@@ -39,11 +46,14 @@ function selectCharacter(type)
   menu.style.display  = "none";
 
   if (type === "bruiser") {
-     player = new Bruiser (0,0, "green", 80,100, socket.id);
+      spawn = generateRandomSpawn(80,100);
+
+     player = new Bruiser (spawn.x,spawn.y, "green", 80,100, socket.id);
     }
     else if (type ==="assassin")
     {
-       player = new Assassin  (0,0, "red", 40, 120, socket.id);
+      spawn = generateRandomSpawn(40,120);
+       player = new Assassin  (spawn.x,spawn.y, "red", 40, 120, socket.id);
     }
  
     startGame();
