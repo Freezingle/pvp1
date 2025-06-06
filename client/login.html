@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login / Register | Fury Arena</title>
+   <link rel="stylesheet" href="styles.css" />  
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+</head>
+<body>
+  <nav>
+    <div class="logo">FURY ARENA</div>
+    <ul>
+      <li><a href="/home.html" >Home</a></li>
+      <li><a href="/about.html">About</a></li>
+      <li><a href="/#" class="active">Login / Register</a></li>
+    </ul>
+  </nav>
+
+  <main class="flex items-center justify-center min-h-[calc(100vh-80px)] px-4">
+    <!-- Left image area -->
+    <div class="w-1/4 hidden md:block h-full">
+      <!-- Add your image here later -->
+    </div>
+
+    <!-- Center login/register card -->
+    <div class="w-full max-w-md animate__animated animate__fadeIn">
+      <!-- LOGIN BOX -->
+      <div id="loginBox" class="bg-black/60 rounded-lg p-8 shadow-lg">
+        <h1 class="text-3xl font-bold mb-6 text-pink-500 text-center">Login</h1>
+        <form>
+          <input type="text" placeholder="Username" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" />
+          <input type="password" placeholder="Password" class="w-full mb-6 p-2 rounded bg-gray-800 text-white" />
+          <button type="submit" class="btn w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded font-bold transition">Login</button>
+        </form>
+        <div class="text-center mt-4">
+          <span>Don't have an account?</span>
+          <a href="#" class="text-pink-400 hover:underline" onclick="toggleForms()">Register</a>
+        </div>
+      </div>
+
+      <!-- REGISTER BOX -->
+      <div id="registerBox" class="bg-black/60 rounded-lg p-8 shadow-lg mt-8 hidden">
+        <h1 class="text-3xl font-bold mb-6 text-pink-500 text-center">Register</h1>
+        <form>
+          <input type="text" placeholder="Username" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" />
+          <input type="password" placeholder="Password" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" />
+          <input type="password" placeholder="Confirm Password" class="w-full mb-6 p-2 rounded bg-gray-800 text-white" />
+          <button type="submit" class="btn w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded font-bold transition">Register</button>
+        </form>
+        <div class="text-center mt-4">
+          <span>Already have an account?</span>
+          <a href="#" class="text-pink-400 hover:underline" onclick="toggleForms()">Login</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right image area -->
+    <div class="w-1/4 hidden md:block h-full">
+      <!-- Add your image here later -->
+    </div>
+  </main>
+
+  <script>
+    function toggleForms() {
+      const loginBox = document.getElementById('loginBox');
+      const registerBox = document.getElementById('registerBox');
+      loginBox.classList.toggle('hidden');
+      registerBox.classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>

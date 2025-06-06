@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About | Fury Arena</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+  .glow-box {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #ff0077;
+    box-shadow: 0 0 8px #ff0077; /* Lowered neon intensity */
+    transition: transform 0.3s ease;
+  }
+  .glow-box:hover {
+    transform: scale(1.02);
+  }
+  .glitch {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 3rem;
+    position: relative;
+    color: #ff0077;
+  }
+  .glitch::before,
+  .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .glitch::before {
+    text-shadow: -2px 0 #00ffff;
+    animation: glitchTop 2s infinite linear;
+    clip-path: inset(0 0 60% 0);
+  }
+  .glitch::after {
+    text-shadow: 2px 0 #ff00aa;
+    animation: glitchBot 2s infinite linear reverse;
+    clip-path: inset(60% 0 0 0);
+  }
+  @keyframes glitchTop {
+    0%, 20%, 40%, 60%, 80%, 100% { transform: translate(0); }
+    10%  { transform: translate(-3px, -2px); }
+    30%  { transform: translate( 3px,  2px); }
+    50%  { transform: translate(-2px,  3px); }
+    70%  { transform: translate( 2px, -3px); }
+    90%  { transform: translate(-1px,  1px); }
+  }
+  @keyframes glitchBot {
+    0%, 20%, 40%, 60%, 80%, 100% { transform: translate(0); }
+    10%  { transform: translate( 3px,  2px); }
+    30%  { transform: translate(-3px, -2px); }
+    50%  { transform: translate( 2px, -3px); }
+    70%  { transform: translate(-2px,  3px); }
+    90%  { transform: translate( 1px, -1px); }
+  }
+  </style>
+</head>
+<body style=" margin-top: 100px">
+   <nav>
+    <div class="logo">FURY ARENA</div>
+    <ul>
+      <li><a href="/home.html" >Home</a></li>
+      <li><a href="/#"  class="active">About</a></li>
+      <li><a href="/login.html">Login / Register</a></li>
+    </ul>
+  </nav>
+
+  <header class="text-center py-12">
+    <h1 class="glitch" data-text="WELCOME TO THE ARENA">WELCOME TO THE ARENA</h1>
+    <p class="text-gray-300 mt-4 text-lg max-w-2xl mx-auto px-4">A realm where every second counts, every move matters, and your legend is waiting to be written.</p>
+  </header>
+
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-8 pb-20 max-w-7xl mx-auto">
+    <div class="glow-box p-6 rounded-xl">
+      <h2 class="text-xl font-bold text-pink-400 mb-2">🎮 The Game</h2>
+      <p class="text-gray-200">Fury Arena isn’t just a game—it’s a battle-sim where skill, speed, and chaos collide. Designed for hardcore warriors and casual brawlers alike.</p>
+    </div>
+
+    <div class="glow-box p-6 rounded-xl">
+      <h2 class="text-xl font-bold text-pink-400 mb-2">👾 The Mission</h2>
+      <p class="text-gray-200">Bring back the adrenaline-fueled joy of arcade combat in a modern multiplayer battleground. We build with fun first—always.</p>
+    </div>
+
+    <div class="glow-box p-6 rounded-xl">
+      <h2 class="text-xl font-bold text-pink-400 mb-2">⚙️ The Tech</h2>
+      <p class="text-gray-200">Powered by blazing-fast frameworks and hand-crafted pixel perfection. Every feature is designed to be light, fast, and reactive.</p>
+    </div>
+
+    <div class="glow-box p-6 rounded-xl">
+      <h2 class="text-xl font-bold text-pink-400 mb-2">🧠 The Team</h2>
+      <p class="text-gray-200">We’re indie rebels, midnight coders, and caffeine-powered artists. Based everywhere, building something insane together.</p>
+    </div>
+
+    <div class="glow-box p-6 rounded-xl">
+      <h2 class="text-xl font-bold text-pink-400 mb-2">🧭 The Lore</h2>
+      <p class="text-gray-200">Centuries ago, the Fury Core fractured the realms. Now, only champions remain to rewrite history in the Arena of Fire.</p>
+    </div>
+
+    <div class="glow-box p-6 rounded-xl">
+      <h2 class="text-xl font-bold text-pink-400 mb-2">🚀 The Future</h2>
+      <p class="text-gray-200">PvP, guild raids, custom avatars, marketplace skins, live tournaments... This is just Level 1. Wait till you see the boss fight.</p>
+    </div>
+  </section>
+
+  <footer class="text-center text-sm text-gray-500 pb-6">© 2025 Fury Arena. All rights reserved.</footer>
+</body>
+</html>
