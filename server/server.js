@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const path = require('path');
+const bcrypt = require("bcrypt");
 
 const { Server } = require("socket.io");
 
@@ -16,7 +17,19 @@ app.use(express.static(path.join(__dirname, '../client')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/index.html'));
 });
+app.get ('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/about.html'));
+})
+app.get ('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/login.html'));
+})
 
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/register.html'));
+})
+app.get('/home', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/home.html'));
+})
 
 // Keep track of rooms and players (simple version)
 const rooms = {};
