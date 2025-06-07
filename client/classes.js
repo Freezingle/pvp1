@@ -9,6 +9,9 @@ class Character {
         this.isAttacking = false;
         this.facingDirection = 1; // 1 = right, -1 = left
         this.hitPoints= 100; // Default hit points
+        this.gravity = 0.7;
+        this.velocityY = 0; // Vertical velocity for gravity effect
+        this.ground = canvas.height -10- this.height; // TODO make this dynamic
 
         this.attackBox = {
             position: { x: this.x, y: this.y },
@@ -50,7 +53,7 @@ class Character {
 
             //defeat sprite here
 
-            //notifying the server about defeat
+            // TODO notifying the server about defeat
             socket.emit("playerDefeated", {roomId, defeatedId: this.id, winnerId: attackerId})
         }
     }
@@ -58,8 +61,19 @@ class Character {
     move(keys) {
         if (keys['d']) this.x += this.speed;
         if (keys['a']) this.x -= this.speed;
-        if (keys['w']) this.y -= this.speed;
         if (keys['s']) this.y += this.speed;
+
+         if (keys['w'] && this.y >= this.ground) {
+        this.velocityY = -15;  //TODO ADJUST LATER
+    }
+
+        //gravityeffect
+        this.velocityY += this.gravity;
+        this.y += this.velocityY;
+          if (this.y >= this.ground) {
+            this.y = this.ground;
+            this.velocityY = 0;
+        }
 
         this.attackBox.position.x = this.x;
         this.attackBox.position.y = this.y;
@@ -166,6 +180,7 @@ class  BackgroundSprite {
     this.lastFrameTime = 0;
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
+    this.ground  = canvas.height - 10;
 
     //load frames
     imagePaths.forEach((path)=>{

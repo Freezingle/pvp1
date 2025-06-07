@@ -22,7 +22,7 @@ function generateFramePath (folderPath, frameCount, filePrefix = "frame", extens
 function generateRandomSpawn(playerWidth, playerHeight){
     const margin = 20; // Prevent spawning at the very edge
   const x = Math.floor(Math.random() * (canvas.width - playerWidth - margin * 2)) + margin;
-  const y = Math.floor(Math.random() * (canvas.height - playerHeight - margin * 2)) + margin;
+    const y = canvas.height - playerHeight - 20; // spawn on ground
   return { x, y };
 }
 
