@@ -1,0 +1,21 @@
+donot allow 2 players login simultaneously
+create actual rooms 
+
+update ui for loggedin accounts
+
+update gamelogic:
+add special attacks
+add extra characters
+add music
+
+update graphics:
+ create animation sprites 
+ add animation sprites
+ create more maps to play on
+
+
+create game reward system-> ----
+
+deploy!
+
+optional but might be necessary : halt vanilla html and switch to reactjs/ some other frameworks
