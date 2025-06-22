@@ -1,7 +1,11 @@
 const express = require("express");
+require('dotenv').config();
 const http = require("http");
 const path = require('path');
 const bcrypt = require("bcrypt");
+const collection = require("./config.js"); 
+const session = require("express-session");
+const PORT = process.env.PORT;
 
 const { Server } = require("socket.io");
 
@@ -9,13 +13,30 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = 3000;
+ app.use (session({
+ secret : process.env.SESSION_SECRET, //to verify cookie's integrity
+ resave: false, //controls force saving of session
+ saveUninitialized: true //controls saving of uninitialized session
+  }))
+function requireLogin(req, res, next) {
+  if (req.session.user) {
+    next(); // User is logged in, proceed to the next middleware or route handler
+  }
+  else {  
+    res.redirect('/login.html');
+   }
+   }
+
+
+// Middleware to parse JSON and URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (like index.html, index.js)
 app.use(express.static(path.join(__dirname, '../client')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
+app.get('/game', requireLogin, (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/game.html'));
 });
 app.get ('/about', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/about.html'));
@@ -23,13 +44,53 @@ app.get ('/about', (req, res) => {
 app.get ('/login', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/login.html'));
 })
-
-app.get('/register', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/register.html'));
-})
 app.get('/home', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/home.html'));
 })
+
+app.post("/register", async (req, res) => {
+  const { username, password, confirmPassword } = req.body;
+
+  // Check if passwords match
+  if (password !== confirmPassword) {
+    return res.status(400).json({success: false, message: "Passwords donot match"});  //bad request
+  }
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  //this is the data to be inserted in the database
+  const data = {
+    name: username,
+    password: hashedPassword
+  };
+
+  //check if user already exists
+  const existingUser = await collection.findOne({ name: data.name });
+  if (existingUser) {
+    
+    return res.status(400).json({success:false, message: "User already exists"});  //bad request
+  }
+  else{
+     await collection.insertOne(data);
+     return  res.status(201).json({success:true, message: "User registered successfully"});  //created response  
+  }
+});
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  // Find user in the database
+  const user = await collection .findOne({ name: username });
+  if (!user) {
+    return res.status(400).json({success: false, message: "User not found"});  //bad request
+  }
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) {
+    return res.status(400).json({success: false, message: "Invalid password"});  //bad request
+  }
+  req.session.user = user.name; 
+  res.json({success: true, message: "Login successful"});
+})
+
 
 // Keep track of rooms and players (simple version)
 const rooms = {};

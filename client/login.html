@@ -31,10 +31,11 @@
       <!-- LOGIN BOX -->
       <div id="loginBox" class="bg-black/60 rounded-lg p-8 shadow-lg">
         <h1 class="text-3xl font-bold mb-6 text-pink-500 text-center">Login</h1>
-        <form>
-          <input type="text" placeholder="Username" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" />
-          <input type="password" placeholder="Password" class="w-full mb-6 p-2 rounded bg-gray-800 text-white" />
-          <button type="submit" class="btn w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded font-bold transition">Login</button>
+        <form id ="loginForm" action="/login" method="post"> 
+          <input type="text" id = "Loginname" name="username"  placeholder="Username" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" required autocomplete ="off" />
+          <input type="password" placeholder="Password" name="Loginpassword" id="Loginpassword" required class="w-full mb-6 p-2 rounded bg-gray-800 text-white" />
+            <div id="loginMsg" class="text-center text-white mb-4"></div>
+            <button type="submit" class="btn w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded font-bold transition">Login</button>
         </form>
         <div class="text-center mt-4">
           <span>Don't have an account?</span>
@@ -45,10 +46,11 @@
       <!-- REGISTER BOX -->
       <div id="registerBox" class="bg-black/60 rounded-lg p-8 shadow-lg mt-8 hidden">
         <h1 class="text-3xl font-bold mb-6 text-pink-500 text-center">Register</h1>
-        <form>
-          <input type="text" placeholder="Username" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" />
-          <input type="password" placeholder="Password" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" />
-          <input type="password" placeholder="Confirm Password" class="w-full mb-6 p-2 rounded bg-gray-800 text-white" />
+        <form action="/register" method = "post" id = "registerForm">
+          <input type="text"  id ="name" name="username" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" required autocomplete="off" />
+          <input type="password" placeholeder= "Password" name="password" id = "password" class="w-full mb-4 p-2 rounded bg-gray-800 text-white" required />
+          <input type="password" placeholder="Confirm Password" name="confirmPassword" id ="confirmPassword" required class="w-full mb-6 p-2 rounded bg-gray-800 text-white" />
+          <div id = "registerMsg" class="text-center text-white mb-4"></div>
           <button type="submit" class="btn w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded font-bold transition">Register</button>
         </form>
         <div class="text-center mt-4">
@@ -71,6 +73,76 @@
       loginBox.classList.toggle('hidden');
       registerBox.classList.toggle('hidden');
     }
+
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById("Loginname").value;
+      const password = document.getElementById("Loginpassword").value;
+      const msg = document.getElementById("loginMsg");
+
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
+      const result = await response.json();
+      msg.textContent= result.message;
+      if (result.success) {
+        msg.classList.remove("text-red-500");
+        msg.classList.add("text-green-500");
+
+        // Wait a moment and redirect to game page
+    setTimeout(() => {
+      window.location.href = "/game.html";
+    }, 1500);
+        
+      } else {
+        msg.classList.remove("text-green-500");
+        msg.classList.add("text-red-500");
+      }
+     
+
+    });
+    
+    document.getElementById('registerForm').addEventListener('submit', async function (e){
+      e.preventDefault();
+
+      const username  = document.getElementById("name").value;
+      const password  = document.getElementById("password").value;
+      const confirmPassword  = document.getElementById("confirmPassword").value;
+      const  msg = document.getElementById("registerMsg");
+
+      const response = await fetch('/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password, confirmPassword })
+      });
+
+      const result = await response.json();
+      msg.textContent = result.message;
+      
+    if (result.success) {
+      msg.classList.remove("text-red-500");
+      msg.classList.add("text-green-500");
+
+      // Wait a moment and go to login form
+      setTimeout(() => {
+        toggleForms();
+        document.getElementById("registerForm").reset();
+        msg.textContent = "";
+      }, 1500);
+    }
+      else {
+        msg.classList.remove("text-green-500");
+        msg.classList.add("text-red-500");
+      }
+
+    });
   </script>
 </body>
 </html>
