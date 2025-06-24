@@ -36,7 +36,7 @@ function isColliding(rect1, rect2) {
   );
 }
 
-const bgImagePaths  = generateFramePath("assets/background/asian1",20);
+const bgImagePaths  = generateFramePath("../assets/background/asian1",20);
 
    const background = new BackgroundSprite(bgImagePaths,100,canvas.width,canvas.height); 
 
