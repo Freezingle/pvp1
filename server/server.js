@@ -33,11 +33,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (like index.html, index.js)
-app.use(express.static(path.join(__dirname, '../client')));
-
-app.get('/game', requireLogin, (req, res) => {
+app.get('/game.html', requireLogin, (req, res) => {
   res.sendFile(path.join(__dirname, '../client/game.html'));
 });
+
+app.use(express.static(path.join(__dirname, '../client')));
+
+
 app.get ('/about', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/about.html'));
 })
