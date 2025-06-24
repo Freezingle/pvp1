@@ -4,7 +4,38 @@ const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = 1024;
 canvas.height =576;
-const roomId = "room1"; // static for demo
+const roomMenu = document.getElementById("roomMenu");
+const joinBtn = document.getElementById("joinBtn");
+let roomId = null;
+
+
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const roomFromUrl = params.get('room');
+  if (roomFromUrl) {
+    document.getElementById('roomInput').value = roomFromUrl.toUpperCase();
+  }
+});
+
+joinBtn.addEventListener ("click",()=>{
+  
+
+   roomId = document.getElementById("roomInput").value.trim();
+  if (!roomId) {
+    // Generate random room ID if not entered
+    roomId = Math.random().toString(36).substr(2, 6).toUpperCase();
+    alert("Created Room: " + roomId);
+  }
+
+  const  url  = new URL(window.location);
+  url.searchParams.set("roomId", roomId);
+window.history.replaceState(null, null, url.toString());
+
+     document.getElementById('roomMenu').style.display = 'none';
+    // Show the character select menu
+    document.getElementById('characterSelectMenu').style.display = 'flex';
+  });
+
 
 let player = null;
 let enableAttack = false;
