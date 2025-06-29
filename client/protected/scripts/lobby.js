@@ -30,3 +30,31 @@ window.history.replaceState(null, null, url.toString());
     window.location.href = `game.html?room=${roomId}`;
     
   });
+
+  window.addEventListener('DOMContentLoaded', async()=>{
+    try{
+      const res  = await fetch('/api/userinfo');
+      if (!res.ok) {throw new Error('Failed to fetch user info');}
+       const data = await res.json();
+      document.getElementById("userNameDisplay").textContent = data.name;
+
+      //update stats:
+      const statValues = document.querySelectorAll('#playerStats .stat-value');
+
+statValues[0].textContent = data.tokens;
+statValues[1].textContent = data.xpLevel;
+statValues[2].textContent = data.gamesPlayed;
+statValues[3].textContent = data.wins;
+
+
+    }
+    catch(error){
+      console.error("Error fetching user info:", error);
+      alert("Failed to load user info. Please try again later.");
+    }
+  })
+
+document.getElementById('logoutBtn').addEventListener('click',async()=>{
+  await fetch ('/logout', {method: 'POST'});
+  window.location.href = './login.html';
+})

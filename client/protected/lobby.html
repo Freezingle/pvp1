@@ -1,28 +1,53 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fury Arena Lobby</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Oswald:wght@400;600&display=swap" rel="stylesheet" />
   <style>
-    /* Reset and base */
     * {
       box-sizing: border-box;
     }
+
     body, html {
-      margin: 0; padding: 0; height: 100%;
+      margin: 0; padding: 0;
       font-family: 'Orbitron', monospace;
       background: #0a0a0a;
-      color: #f33; /* Slight base red */
+      color: #f33;
       overflow: hidden;
       display: flex;
       height: 100vh;
       width: 100vw;
-      direction: ltr;
+      gap: 24px; /* Added spacing between left and right */
     }
 
-    /* Right menu container */
+    #logoutBtn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      font-family: 'Orbitron', monospace;
+      border: none;
+      border-radius: 8px;
+      background: #ff2222;
+      color: #fff;
+      font-weight: bold;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #ff4444aa;
+      transition: 0.3s ease;
+      z-index: 99;
+    }
+
+    #logoutBtn:hover {
+      background: #cc0000;
+      box-shadow: 0 0 15px #ff5555cc;
+    }
+
+    /* All your existing styles follow below — untouched */
+
     #roomMenu {
       width: 320px;
       background: rgba(20,0,0,0.85);
@@ -34,10 +59,9 @@
       padding: 2rem 1.5rem;
       box-shadow: inset 0 0 20px #ff333333;
       user-select: none;
-      order: 1; /* Ensure right side */
+      order: 1;
     }
 
-    /* Menu header */
     #roomMenu h2 {
       font-size: 2.8rem;
       font-weight: 700;
@@ -50,7 +74,6 @@
         0 0 18px #ff4444bb;
     }
 
-    /* Inputs */
     #roomMenu input[type="text"] {
       width: 100%;
       margin: 0.8rem 0;
@@ -76,7 +99,6 @@
       color: #ff5555;
     }
 
-    /* Button */
     #joinBtn {
       margin-top: 2rem;
       padding: 14px 48px;
@@ -104,7 +126,6 @@
       background: linear-gradient(135deg, #ff6666ee, #cc1111ee);
     }
 
-    /* Center container */
     #centerStage {
       flex: 1;
       position: relative;
@@ -114,10 +135,9 @@
       align-items: center;
       perspective: 800px;
       background: #120000;
-      order: 0; /* left side */
+      order: 0;
     }
 
-    /* Doctor Strange style swirling animation container */
     #magicRing {
       position: relative;
       width: 350px;
@@ -128,7 +148,6 @@
       z-index: 1;
     }
 
-    /* multiple ring layers for mystical swirl */
     .ring {
       position: absolute;
       border: 2.5px solid transparent;
@@ -141,6 +160,7 @@
       mix-blend-mode: screen;
       box-shadow: 0 0 20px #ff4444cc;
     }
+
     .ring:nth-child(1) {
       width: 340px;
       height: 340px;
@@ -148,6 +168,7 @@
       margin-top: -170px;
       animation-duration: 4s;
     }
+
     .ring:nth-child(2) {
       width: 270px;
       height: 270px;
@@ -157,6 +178,7 @@
       border-top-color: #cc2222cc;
       box-shadow: 0 0 18px #cc2222cc;
     }
+
     .ring:nth-child(3) {
       width: 210px;
       height: 210px;
@@ -166,6 +188,7 @@
       border-top-color: #ff5555bb;
       box-shadow: 0 0 15px #ff5555bb;
     }
+
     .ring:nth-child(4) {
       width: 150px;
       height: 150px;
@@ -176,7 +199,6 @@
       box-shadow: 0 0 14px #ff6666ee;
     }
 
-    /* Game name styling */
     #gameTitle {
       position: absolute;
       top: 50%;
@@ -196,7 +218,6 @@
       pointer-events: none;
     }
 
-    /* Username Godly Text - above magic ring */
     #userNameDisplay {
       position: absolute;
       top: 5%;
@@ -221,7 +242,6 @@
       white-space: nowrap;
     }
 
-    /* Player Stats Container - below magic ring */
     #playerStats {
       position: absolute;
       bottom: 5%;
@@ -244,7 +264,6 @@
       letter-spacing: 0.05em;
     }
 
-    /* Each stat block */
     #playerStats .stat {
       display: flex;
       flex-direction: column;
@@ -278,7 +297,6 @@
         0 0 12px #ff4444;
     }
 
-    /* Animations */
     @keyframes spinSlow {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
@@ -289,10 +307,10 @@
       100% { transform: rotate(-360deg); }
     }
 
-    /* Responsive tweaks */
     @media (max-width: 768px) {
       body {
         flex-direction: column;
+        gap: 0;
       }
 
       #roomMenu {
@@ -333,8 +351,10 @@
 </head>
 <body>
 
+  <button id="logoutBtn">Logout</button>
+
   <div id="centerStage">
-    <div id="userNameDisplay">THE MIGHTY WARRIOR</div> <!-- Username display -->
+    <div id="userNameDisplay">THE MIGHTY WARRIOR</div>
 
     <div id="magicRing">
       <div class="ring"></div>
@@ -346,10 +366,10 @@
     <div id="gameTitle">FURY ARENA</div>
 
     <div id="playerStats">
-      <div class="stat"><span class="stat-label">Tokens:</span> <span class="stat-value">9999</span></div>
-      <div class="stat"><span class="stat-label">XP Level:</span> <span class="stat-value">42</span></div>
-      <div class="stat"><span class="stat-label">Games Played:</span> <span class="stat-value">123</span></div>
-      <div class="stat"><span class="stat-label">Wins:</span> <span class="stat-value">88</span></div>
+      <div class="stat"><span class="stat-label">Tokens:</span> <span class="stat-value"></span></div>
+      <div class="stat"><span class="stat-label">XP Level:</span> <span class="stat-value"></span></div>
+      <div class="stat"><span class="stat-label">Games Played:</span> <span class="stat-value"></span></div>
+      <div class="stat"><span class="stat-label">Wins:</span> <span class="stat-value"></span></div>
     </div>
   </div>
 
@@ -360,7 +380,7 @@
     <button id="joinBtn">Enter Arena</button>
   </div>
 
-   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-      <script src="/protected/scripts/lobby.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="/protected/scripts/lobby.js"></script>
 </body>
 </html>
