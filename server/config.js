@@ -14,19 +14,13 @@ const connect = mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopol
 
     //creating a schema for user
     const LoginSchema = new mongoose.Schema({
-        name:{
-            type: String,
-            required: true
-
-        },
-        password: {
-            type:String,
-            required: true
-        },
-        isLoggedIn: {
-    type: Boolean,
-    default: false  
-  }
+        name:{type: String,required: true},
+        password: {type:String,required: true},
+        isLoggedIn: {type: Boolean, default: false},
+        tokens: {type:Number, default:0},
+        xpLevel: {type:Number, default:1},
+        gamesPlayed: {type:Number, default:0},
+        wins: {type:Number, default:0}
     })
 
     //creating a collectio modelfor user

@@ -102,13 +102,44 @@ app.post("/login", async (req, res) => {
   if (!user) {
     return res.status(400).json({ success: false, message: "User not found" });
   }
+  if(user.isLoggedIn){
+    return res.status(400).json({success: false, message: "User already logged in"});
+  }
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
     return res.status(400).json({ success: false, message: "Invalid password" });
   }
+  //setting login to true 
+  await collection.updateOne({name:username}, {$set:{isLoggedIn:true}});
   req.session.user = user.name;
   res.json({ success: true, message: "Login successful" });
 });
+
+app.post("/logout", requireLogin, async (req, res) => {
+  await collection.updateOne({ name: req.session.user }, { $set: { isLoggedIn: false } });
+  req.session.destroy(() => {
+    res.json({ success: true, message: "Logged out" });
+  });
+});
+
+// ===API===
+app.get('/api/userinfo', requireLogin, async(req,res)=>{
+  const user = await collection.findOne({name:req.session.user});
+  if(!user)
+  {
+    return res.status(404).json({success:false, message:"User not found"});
+  }
+  res.json({
+    name: user.name,
+    tokens:user.tokens,
+    xpLevel: user.xpLevel,
+    gamesPlayed: user.gamesPlayed,
+    wins: user.wins
+  });
+});
+
+
+
 
 // === SOCKET.IO ===
 
