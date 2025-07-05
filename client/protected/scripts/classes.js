@@ -12,6 +12,9 @@ class Character {
         this.gravity = 0.7;
         this.velocityY = 0; // Vertical velocity for gravity effect
         this.ground = canvas.height -10- this.height; // TODO make this dynamic
+        this.specialActive = false;
+                this.specialTimer = null;
+
 
         this.attackBox = {
             position: { x: this.x, y: this.y },
@@ -86,14 +89,88 @@ class Bruiser extends Character {
         this.speed = 4; // Bruisers are slower
         this.type = "Bruiser";
         this.attackBox.width = 50; // Wider attack box
-        this.attackBox.height = 30; // Taller attack box
+        this.attackBox.height = this.height; // Taller attack box
         this.punchPower = 20; // Higher attack power
         this.maxHp = 200;
     }
-    attack (ctx){
+    
+    activateSpecial(){
+        if(this.specialActive) return; 
+        //setting up boosts for special atk
+        this.specialActive = true;
+        //storing the original atributes
+        this._originalSpeed = this.speed;
+    this._originalAttackBox = {
+        width: this.attackBox.width,
+        height: this.attackBox.height,
+        offsetX: this.attackBox.offsetX,
+        offsetY: this.attackBox.offsetY
+    };
+        this.speed= 8;  //temporary speed boost
+
+    this.attackBox.width = this.width * 2; // Wider area
+    this.attackBox.height = this.height * 1.5; // Taller area
+    this.attackBox.offsetX = -this.width / 2; // Centered
+    this.attackBox.offsetY = -this.height * 0.25;
+
+    setTimeout(() => {
+        this.specialActive = false;
+        this.speed = this._originalSpeed;
+        this.attackBox.width = this._originalAttackBox.width;
+        this.attackBox.height = this._originalAttackBox.height;
+        this.attackBox.offsetX = this._originalAttackBox.offsetX;
+        this.attackBox.offsetY = this._originalAttackBox.offsetY;
+    }, 5000);
+}
+    special(ctx) {
+
+    if (!this.specialActive || this.isAttacking) return;
+
+    this.isAttacking = true;
+
+    // Little jump effect
+    this.velocityY = -8; // Adjust as needed
+
+    // Use the special attack box (already set by activateSpecial)
+    const atkBox = {
+        x: this.attackBox.position.x ,
+        y: this.attackBox.position.y,
+        width: this.attackBox.width,
+        height: this.attackBox.height
+    };
+
+    Object.values(otherPlayers).forEach(opponent => {
+        const opponentRect = {
+            id: opponent.id,
+            x: opponent.x,
+            y: opponent.y,
+            width: opponent.width,
+            height: opponent.height
+        };
+        if (isColliding(atkBox, opponentRect)) {
+            // Deal extra damage for special attack
+            socket.emit("hitTaken", {
+                targetId: opponent.id,
+                roomId,
+                attackPower: this.punchPower * 2 // or any special value
+            });
+        }
+    });
+
+    // Attack animation duration (shorter than special duration)
+    setTimeout(() => {
+        this.isAttacking = false;
+    }, 600); // Adjust as needed
+}
+
+    attack (ctx, type){
         if (this.isAttacking) return; // Prevent multiple attacks at once
         this.isAttacking = true;
-
+        if(type==="special"){
+            this.activateSpecial();
+            return;
+        }
+         else if (type!="basic") return;
          const atkBox = {
       x: player.attackBox.position.x + player.attackBox.offsetX,
       y: player.attackBox.position.y + player.attackBox.offsetY,
@@ -111,6 +188,7 @@ class Bruiser extends Character {
       if (isColliding(atkBox, opponentRect)) {
         socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.punchPower });
       }
+    
     });
        
         console.log("Bruiser attacks with brute force!");
@@ -125,7 +203,7 @@ class Bruiser extends Character {
       // Deactivate attack box here
     }, 1000);
     }
-}
+  }
 
 class Assassin extends Character {
     constructor(x, y, color, width, height, id) {
@@ -138,8 +216,6 @@ class Assassin extends Character {
         this.atkBox;
         // Dash special state
         this.dashAvailable = 0;
-        this.dashTimer = null;
-        this.specialActive = false;
         this.maxHp = 90;
     }
 
@@ -148,7 +224,7 @@ class Assassin extends Character {
         this.specialActive = true;
         this.dashAvailable = 2;
         // End special after 5 seconds
-        this.dashTimer = setTimeout(() => {
+        this.specialTimer = setTimeout(() => {
             this.specialActive = false;
             this.dashAvailable = 0;
         }, 5000);
@@ -204,7 +280,7 @@ class Assassin extends Character {
             this.isDashing = false;
             if (this.dashAvailable === 0) {
                 this.specialActive = false;
-                clearTimeout(this.dashTimer);
+                clearTimeout(this.specialTimer);
             }
         }
     };
