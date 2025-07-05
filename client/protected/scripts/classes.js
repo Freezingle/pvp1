@@ -87,7 +87,8 @@ class Bruiser extends Character {
         this.type = "Bruiser";
         this.attackBox.width = 50; // Wider attack box
         this.attackBox.height = 30; // Taller attack box
-        this.attackPower = 20; // Higher attack power
+        this.punchPower = 20; // Higher attack power
+        this.maxHp = 200;
     }
     attack (ctx){
         if (this.isAttacking) return; // Prevent multiple attacks at once
@@ -108,7 +109,7 @@ class Bruiser extends Character {
         height: opponent.height
       };
       if (isColliding(atkBox, opponentRect)) {
-        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.attackPower });
+        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.punchPower });
       }
     });
        
@@ -127,22 +128,105 @@ class Bruiser extends Character {
 }
 
 class Assassin extends Character {
-    constructor(x, y, color,width,height, id) {
-        super(x, y, color,width,height, id);
-        this.speed = 10; // Assassins are faster
-        this.type = "Assassin"; 
-        this.attackBox.width = 25; // Narrower attack box
-        this.attackBox.height = 14;
-        this.attackBox.offsetY =20;
-        this.attackPower = 10; // Moderate attack power
+    constructor(x, y, color, width, height, id) {
+        super(x, y, color, width, height, id);
+        this.speed = 10;
+        this.type = "Assassin";
+        this.attackBox.offsetY = 20;
+        this.basic = 10;
+        this.dashPower;
+        this.atkBox;
+        // Dash special state
+        this.dashAvailable = 0;
+        this.dashTimer = null;
+        this.specialActive = false;
+        this.maxHp = 90;
     }
-    attack(ctx) {
+
+    activateSpecial() {
+        if (this.specialActive) return;
+        this.specialActive = true;
+        this.dashAvailable = 2;
+        // End special after 5 seconds
+        this.dashTimer = setTimeout(() => {
+            this.specialActive = false;
+            this.dashAvailable = 0;
+        }, 5000);
+    }
+
+    special() {
+    if (!this.specialActive || this.dashAvailable <= 0 || this.isDashing) return;
+
+    this.isDashing = true;
+    this.dashAvailable--;
+
+    const startX = this.x;
+    const endX = this.facingDirection  ===1
+        ? canvas.width - this.width
+        : 0;
+    const distance = endX - startX;
+    const duration = 200;
+    const startTime = performance.now();
+
+    const dashStep = (now) => {
+        const elapsed = now - startTime;
+        let progress = Math.min(elapsed / duration, 1);
+        this.x = startX + distance * progress;
+
+        // Check collision with all opponents on each frame
+        Object.values(otherPlayers).forEach(opponent => {
+            const opponentRect = {
+                x: opponent.x,
+                y: opponent.y,
+                width: opponent.width,
+                height: opponent.height
+            };
+            const assassinRect = {
+                x: this.x,
+                y: this.y,
+                width: this.width,
+                height: this.height
+            };
+            if (isColliding(assassinRect, opponentRect)) {
+                // 50% of opponent's max health
+                const damage = opponent.maxHp ? opponent.maxHp * 0.5 : 50;
+                socket.emit("hitTaken", {
+                    targetId: opponent.id,
+                    roomId,
+                    attackPower: damage
+                });
+            }
+        });
+
+        if (progress < 1) {
+            requestAnimationFrame(dashStep);
+        } else {
+            this.isDashing = false;
+            if (this.dashAvailable === 0) {
+                this.specialActive = false;
+                clearTimeout(this.dashTimer);
+            }
+        }
+    };
+
+    requestAnimationFrame(dashStep);
+}
+
+    attack(ctx, type) {
+        if (type === "special") {
+            this.activateSpecial();
+            return;
+        }
         if (this.isAttacking) return; // Prevent multiple attacks at once
         this.isAttacking = true;
-        
-        console.log("Assassin strikes swiftly!");
+
+        if(type== "basic")
+        {
+           this.attackBox.width = 25; // Narrower attack box
+           this.attackBox.height = 14;
+
         //activate attack box here
-         const atkBox = {
+       this.atkBox = {
       x: player.attackBox.position.x + player.attackBox.offsetX,
       y: player.attackBox.position.y + player.attackBox.offsetY,
       width: player.attackBox.width,
@@ -156,18 +240,25 @@ class Assassin extends Character {
         width: opponent.width,
         height: opponent.height
       };
+    
       if (isColliding(atkBox, opponentRect)) {
-        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.attackPower });
+        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.basic });
       }
     });
-       
-        setTimeout(() => {
+      setTimeout(() => {
       this.isAttacking = false;
       console.log("Attack ended");
+      return;
 
       // Deactivate attack box here
+
     }, 500);
+
     }
+    
+    }
+       
+      
 } 
 
 

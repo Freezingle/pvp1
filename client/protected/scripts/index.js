@@ -6,7 +6,6 @@ canvas.width = 1024;
 canvas.height =576;
 
 let player = null;
-let enableAttack = false;
 let gameEnded = false;
 
 roomId = new URLSearchParams(window.location.search).get("room");
@@ -90,7 +89,7 @@ function startGame (){
 // Receive current players already in room
 socket.on("currentPlayers", (players) => {
   players.forEach(p => {
-    otherPlayers[p.id] = {id: p.id, x: p.x, y: p.y, width:p.width, height:p.height, color: p.color, attackPower: p.attackPower, hitPoints: p.hitPoints };
+    otherPlayers[p.id] = {id: p.id, x: p.x, y: p.y, width:p.width, height:p.height, color: p.color, attackPower: p.attackPower, hitPoints: p.hitPoints, maxHp: p.maxHp };
   });
 });
 
@@ -144,26 +143,77 @@ loop();
 
 // Control keys for moving local player
 const keys = {};
-//event listeners for keydown and keyup
-window.addEventListener("keydown", (e) =>{if(gameEnded) return; keys[e.key.toLowerCase()] = true});
-window.addEventListener("keyup", (e) => keys[e.key.toLowerCase()] = false);
-window.addEventListener("mousedown", (e)=>{ if( e.button === 0 && !gameEnded ) {enableAttack = true;}}); //leftclick
+let enableAttack = false;
+let attackType = "basic"; // default
 
+// Event listeners
+window.addEventListener("keydown", (e) => {
+  if (gameEnded) return;
+  const key = e.key.toLowerCase();
+  keys[key] = true;
 
-function update() {
-
-  if (gameEnded) return; 
-  player.move(keys);
-  if (enableAttack) {
-    player.attack(ctx);
-   
-    //for drrwing atk box in enemy side emit here
-
-    
-    enableAttack = false;  // reset attack state after attack
+  if (key === "e") {
+    console.log("E key pressed");
+    attackType = "special";
+    enableAttack = true;
   }
+});
+
+window.addEventListener("keyup", (e) => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+let specialReady = false; // Flag to track if special is prepared
+
+// Handle key presses
+window.addEventListener("keydown", (e) => {
+  if (gameEnded) return;
+  const key = e.key.toLowerCase();
+  keys[key] = true;
+
+  if (key === "e") {
+    // Prepare special
+    specialReady = true;
+    console.log("Special attack prepared (E pressed)");
+  }
+
+  if (key === "c") {
+    // Execute special if ready
+    if (specialReady && player && player.specialActive) {
+      console.log("Special attack activated (C pressed)");
+      player.special();
+      specialReady = false; // Reset after firing special
+    }
+  }
+});
+
+window.addEventListener("keyup", (e) => {
+  keys[e.key.toLowerCase()] = false;
+});
+
+// Basic attack with left click
+window.addEventListener("mousedown", (e) => {
+  if (e.button === 0 && !gameEnded) {
+    attackType = "basic";
+    enableAttack = true;
+  }
+});
+
+// Main game update loop
+function update() {
+  if (gameEnded) return;
+
+  player.move(keys);
+
+  if (enableAttack) {
+    player.attack(ctx, attackType);
+    enableAttack = false; // Reset after attack
+  }
+
   socket.emit("playerUpdate", { roomId, x: player.x, y: player.y });
 }
+
+
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
