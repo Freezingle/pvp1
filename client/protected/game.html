@@ -38,6 +38,20 @@
             font-size: 2rem;
             color: white;
         }
+        @keyframes splashyZoom {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 #gameOver {
     position: absolute;
     top: 0;
@@ -49,7 +63,12 @@
     display: none;
     justify-content: center;
     align-items: center;
-    animation: fadeIn 0.5s ease forwards;
+
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+
+    animation: splashyZoom 0.6s ease-out forwards;
 }
 
 .gameOverContent {
@@ -109,6 +128,26 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        #resultText {
+    position: absolute;
+    top: 60%; /* 👈 Push it lower relative to container */
+    transform: translateY(-50%);
+    font-size: 36px;
+    color: white;
+    animation: pulse 1.5s infinite;
+    text-shadow: 0 0 10px #fff, 0 0 20px gold, 0 0 30px orange;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
 
         #characterSelectMenu {
             top: 0;
