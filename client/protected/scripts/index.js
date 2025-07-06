@@ -188,46 +188,84 @@ function update() {
     hitsLanded: player.hitsLanded
   });
 }
+function drawBar(ctx, x, y, width, height, percent, bgColor, fillColor) {
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(x, y, width, height);
+
+  ctx.fillStyle = fillColor;
+  ctx.fillRect(x, y, width * percent, height);
+
+  ctx.strokeStyle = "black";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x, y, width, height);
+}
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   background.draw(ctx, performance.now());
   player.draw(ctx);
 
-  if (player.hitsLanded >= 5 && !player.specialActive) {
-    ctx.font = "bold 26px 'Orbitron', sans-serif";
-    ctx.fillStyle = "gold";
-    ctx.textAlign = "center";
-    ctx.fillText("SPECIAL", player.x + player.width / 2, player.y - 10);
-  } else {
-    ctx.font = "bold 16px 'Orbitron', sans-serif";
-    ctx.fillStyle = "white";
-    ctx.textAlign = "center";
-    ctx.fillText(player.username || "You", player.x + player.width / 2, player.y - 10);
-  }
+  // === CONSTANTS for UI layout ===
+  const barWidth = 80;
+  const barHeight = 6;
+  const barGap = 4;
+  const textGap = 18;
 
+  // === Draw player username or SPECIAL text ===
+  ctx.font = "bold 16px 'Orbitron', sans-serif";
+  ctx.fillStyle = player.hitsLanded >= 5 && !player.specialActive ? "gold" : "white";
+  ctx.textAlign = "center";
+  ctx.fillText(
+    player.hitsLanded >= 5 && !player.specialActive ? "SPECIAL" : (player.username || "You"),
+    player.x + player.width / 2,
+    player.y - textGap
+  );
+
+  // === Player bars ===
+  const playerBarX = player.x + player.width / 2 - barWidth / 2;
+  const playerBarY = player.y - textGap - barGap - barHeight * 2;
+
+  drawBar(ctx, playerBarX, playerBarY, barWidth, barHeight, player.hitPoints / player.maxHp, "#333", "limegreen");
+  drawBar(ctx, playerBarX, playerBarY + barHeight + barGap, barWidth, barHeight, player.stamina / player.maxStamina, "#333", "gold");
+
+  // === Draw your hits info ===
   ctx.font = "20px Orbitron, monospace";
   ctx.fillStyle = "white";
+  ctx.textAlign = "start";
   ctx.fillText(`Your Hits: ${player.hitsLanded}`, 20, 40);
 
+  // === Draw enemies ===
   Object.values(otherPlayers).forEach((p, index) => {
-    ctx.fillText(`Enemy Hits: ${p.hitsLanded || 0}`, 20, 70 + index * 30);
-  });
-
-  Object.values(otherPlayers).forEach((p) => {
+    // Body
     ctx.fillStyle = p.color;
     ctx.fillRect(p.x, p.y, p.width, p.height);
 
+    // Username
     ctx.font = "bold 16px 'Orbitron', sans-serif";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
-    ctx.fillText(p.username || "Enemy", p.x + p.width / 2, p.y - 10);
+    ctx.fillText(p.username || "Enemy", p.x + p.width / 2, p.y - textGap);
+
+    // Bars (above enemy)
+    const enemyBarX = p.x + p.width / 2 - barWidth / 2;
+    const enemyBarY = p.y - textGap - barGap - barHeight * 2;
+
+    drawBar(ctx, enemyBarX, enemyBarY, barWidth, barHeight, p.hitPoints / p.maxHp, "#333", "limegreen");
+    drawBar(ctx, enemyBarX, enemyBarY + barHeight + barGap, barWidth, barHeight, p.stamina / p.maxStamina, "#333", "gold");
+
+    // Hits Info (optional, per enemy)
+    ctx.font = "16px Orbitron, monospace";
+    ctx.textAlign = "start";
+    ctx.fillText(`Enemy Hits: ${p.hitsLanded || 0}`, 20, 70 + index * 30);
   });
 
+  // Update direction toward nearest enemy
   Object.values(otherPlayers).forEach((p) => {
     player.updateAttackDirection(p.x);
   });
 }
+
+
 
 function loop() {
   update();
