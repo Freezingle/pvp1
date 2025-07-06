@@ -10,7 +10,6 @@ let gameEnded = false;
 
 roomId = new URLSearchParams(window.location.search).get("room");
 
-
 function generateFramePath (folderPath, frameCount, filePrefix = "frame", extension = "png") {
   const frames = [];
   for (let i = 1; i <= frameCount; i++) {
@@ -20,10 +19,10 @@ function generateFramePath (folderPath, frameCount, filePrefix = "frame", extens
 }
 
 function generateRandomSpawn(playerWidth, playerHeight){
-    const margin = 20; // Prevent spawning at the very edge
-  const x = Math.floor(Math.random() * (canvas.width - playerWidth - margin * 2)) + margin;
-    const y = canvas.height - playerHeight - 20; // spawn on ground
-  return { x, y };
+    const margin = 20;
+    const x = Math.floor(Math.random() * (canvas.width - playerWidth - margin * 2)) + margin;
+    const y = canvas.height - playerHeight - 20;
+    return { x, y };
 }
 
 function isColliding(rect1, rect2) {
@@ -35,154 +34,128 @@ function isColliding(rect1, rect2) {
   );
 }
 
-const bgImagePaths  = generateFramePath("../assets/background/asian1",20);
+const bgImagePaths = generateFramePath("../assets/background/asian1", 20);
+const background = new BackgroundSprite(bgImagePaths, 100, canvas.width, canvas.height);
 
-   const background = new BackgroundSprite(bgImagePaths,100,canvas.width,canvas.height); 
+async function fetchUserInfo() {
+  try {
+    const res = await fetch("/api/userinfo");
+    const data = await res.json();
+    if (data.success === false) throw new Error(data.message);
+    if (player) {
+      player.username = data.name;
+    }
+  } catch (err) {
+    console.error("Failed to fetch user info:", err.message);
+  }
+}
 
+const otherPlayers = {}; // id -> player object
 
-function selectCharacter(type)
-{
+function selectCharacter(type) {
   const menu = document.getElementById("characterSelectMenu");
-  menu.style.display  = "none";
+  menu.style.display = "none";
 
   if (type === "bruiser") {
-      spawn = generateRandomSpawn(80,100);
-
-     player = new Bruiser (spawn.x,spawn.y, "green", 80,100, socket.id);
-    }
-    else if (type ==="assassin")
-    {
-      spawn = generateRandomSpawn(40,120);
-       player = new Assassin  (spawn.x,spawn.y, "red", 40, 120, socket.id);
-    }
- 
-    startGame();
-
+    const spawn = generateRandomSpawn(80, 100);
+    player = new Bruiser(spawn.x, spawn.y, "green", 80, 100, socket.id);
+  } else if (type === "assassin") {
+    const spawn = generateRandomSpawn(40, 120);
+    player = new Assassin(spawn.x, spawn.y, "red", 40, 120, socket.id);
+  }
+  fetchUserInfo().then(startGame);
 }
 
-
-// Local player state
-//const player = { x: 50, y: 300, color: "blue", id: null };
-const otherPlayers = {}; // id -> {x, y, color}
-
-
-
-function startGame (){
-
-  socket.emit("joinRoom", roomId,
-     {
-      id:socket.id,
-      x: player.x,
-      y:player.y,
-      width: player.width,
-      height: player.height,
-      attackPower: player.attackPower,
-      hitPoints: player.hitPoints,
-      color: player.color
-    }
-  );
-  //room  is full 
-  socket.on("roomFull", (msg) => {
-  alert(msg); // Or display the message in your UI
-});
-
-// Receive current players already in room
-socket.on("currentPlayers", (players) => {
-  players.forEach(p => {
-    otherPlayers[p.id] = {id: p.id, x: p.x, y: p.y, width:p.width, height:p.height, color: p.color, attackPower: p.attackPower, hitPoints: p.hitPoints, maxHp: p.maxHp };
+function startGame() {
+  socket.emit("joinRoom", roomId, {
+    id: socket.id,
+    x: player.x,
+    y: player.y,
+    width: player.width,
+    height: player.height,
+    attackPower: player.attackPower,
+    hitPoints: player.hitPoints,
+    color: player.color,
+    hitsLanded: player.hitsLanded,
+    username: player.username || "Player"
   });
-});
 
-// New player joined
-socket.on("newPlayer", (p) => {
-  otherPlayers[p.id] = { id:p.id, x: p.x, y: p.y, width: p.width, height: p.height, color:p.color, attackPower: p.attackPower, hitPoints: p.hitPoints };
-});
+  socket.on("roomFull", (msg) => {
+    alert(msg);
+  });
 
+  socket.on("currentPlayers", (players) => {
+    players.forEach(p => {
+      otherPlayers[p.id] = { ...p };
+    });
+  });
 
-// Opponent moved
-socket.on("opponentMove", (p) => {
-  if (otherPlayers[p.id]) {
-    otherPlayers[p.id].x = p.x;
-    otherPlayers[p.id].y = p.y;
-    
-  }
-});
+  socket.on("newPlayer", (p) => {
+    otherPlayers[p.id] = { ...p };
+  });
 
-socket.on("gameOver", ({ defeatedId, winnerId }) => {
- 
-  if (socket.id === winnerId) {
-    alert("🎉 You Win!");
-  } else {
-    alert("💀 You Lose!");
-  }
-  gameEnded= true;
+  socket.on("opponentMove", (p) => {
+    if (otherPlayers[p.id]) {
+      otherPlayers[p.id].x = p.x;
+      otherPlayers[p.id].y = p.y;
+      otherPlayers[p.id].hitsLanded = p.hitsLanded || 0;
+    }
+  });
 
-})
+  socket.on("gameOver", ({ defeatedId, winnerId }) => {
+    gameEnded = true;
+    const gameOverDiv = document.getElementById("gameOver");
+    const resultText = document.getElementById("resultText");
+    resultText.innerText = "Press any key !";
 
-// Player left
-socket.on("playerLeft", (id) => {
-  delete otherPlayers[id];
-});
+    if (socket.id === winnerId) {
+      gameOverDiv.style.backgroundImage = "url('/assets/ui/win-bg.jpg')";
+    } else {
+      gameOverDiv.style.backgroundImage = "url('/assets/ui/lose-bg.jpg')";
+    }
 
-socket.on("gotHit", ({ attackPower, attackerId }) => {
-  console.log("You got hit by", attackerId);
+    gameOverDiv.style.display = "flex";
+    window.addEventListener("keydown", () => {
+      window.location.href = "/lobby.html";
+    });
+  });
 
-  //call the gothit method here 
-  player.gotHit(attackPower, attackerId);
-});
+  socket.on("playerLeft", (id) => {
+    delete otherPlayers[id];
+  });
 
-socket.on("hitSuccess", ({ targetId }) => {
-  console.log("You hit player2 with ID:", targetId);
-});
+  socket.on("gotHit", ({ attackPower, attackerId }) => {
+    player.gotHit(attackPower, attackerId);
+  });
 
+  socket.on("hitSuccess", ({ targetId }) => {
+    console.log("You hit player2 with ID:", targetId);
+  });
 
-loop();
-
-
+  loop();
 }
 
-// Control keys for moving local player
 const keys = {};
 let enableAttack = false;
-let attackType = "basic"; // default
+let attackType = "basic";
+let specialReady = false;
 
-// Event listeners
 window.addEventListener("keydown", (e) => {
   if (gameEnded) return;
   const key = e.key.toLowerCase();
   keys[key] = true;
 
   if (key === "e") {
-    console.log("E key pressed");
-    attackType = "special";
-    enableAttack = true;
-  }
-});
-
-window.addEventListener("keyup", (e) => {
-  keys[e.key.toLowerCase()] = false;
-});
-
-let specialReady = false; // Flag to track if special is prepared
-
-// Handle key presses
-window.addEventListener("keydown", (e) => {
-  if (gameEnded) return;
-  const key = e.key.toLowerCase();
-  keys[key] = true;
-
-  if (key === "e") {
-    // Prepare special
-    specialReady = true;
-    console.log("Special attack prepared (E pressed)");
-  }
-
-  if (key === "c") {
-    // Execute special if ready
-    if (specialReady && player && player.specialActive) {
-      console.log("Special attack activated (C pressed)");
+    if (player.hitsLanded >= 5 && !player.specialActive) {
+      attackType = "special";
+      enableAttack = true;
+      specialReady = true;
+      player.hitsLanded = 0;
+    }
+  } else if (key === "c") {
+    if (specialReady && player.specialActive) {
       player.special();
-      specialReady = false; // Reset after firing special
+      specialReady = false;
     }
   }
 });
@@ -191,7 +164,6 @@ window.addEventListener("keyup", (e) => {
   keys[e.key.toLowerCase()] = false;
 });
 
-// Basic attack with left click
 window.addEventListener("mousedown", (e) => {
   if (e.button === 0 && !gameEnded) {
     attackType = "basic";
@@ -199,7 +171,6 @@ window.addEventListener("mousedown", (e) => {
   }
 });
 
-// Main game update loop
 function update() {
   if (gameEnded) return;
 
@@ -207,33 +178,55 @@ function update() {
 
   if (enableAttack) {
     player.attack(ctx, attackType);
-    enableAttack = false; // Reset after attack
+    enableAttack = false;
   }
 
-  socket.emit("playerUpdate", { roomId, x: player.x, y: player.y });
+  socket.emit("playerUpdate", {
+    roomId,
+    x: player.x,
+    y: player.y,
+    hitsLanded: player.hitsLanded
+  });
 }
-
-
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  //background drawing
   background.draw(ctx, performance.now());
-
-  // Draw local player (with attack box if attacking)
   player.draw(ctx);
 
-  // Draw other players (red)
-  Object.values(otherPlayers).forEach(p => {
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, p.width, p.height);
+  if (player.hitsLanded >= 5 && !player.specialActive) {
+    ctx.font = "bold 26px 'Orbitron', sans-serif";
+    ctx.fillStyle = "gold";
+    ctx.textAlign = "center";
+    ctx.fillText("SPECIAL", player.x + player.width / 2, player.y - 10);
+  } else {
+    ctx.font = "bold 16px 'Orbitron', sans-serif";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText(player.username || "You", player.x + player.width / 2, player.y - 10);
+  }
+
+  ctx.font = "20px Orbitron, monospace";
+  ctx.fillStyle = "white";
+  ctx.fillText(`Your Hits: ${player.hitsLanded}`, 20, 40);
+
+  Object.values(otherPlayers).forEach((p, index) => {
+    ctx.fillText(`Enemy Hits: ${p.hitsLanded || 0}`, 20, 70 + index * 30);
   });
 
-  // update attack box position
-  Object.values(otherPlayers).forEach(p => {
+  Object.values(otherPlayers).forEach((p) => {
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, p.width, p.height);
+
+    ctx.font = "bold 16px 'Orbitron', sans-serif";
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.fillText(p.username || "Enemy", p.x + p.width / 2, p.y - 10);
+  });
+
+  Object.values(otherPlayers).forEach((p) => {
     player.updateAttackDirection(p.x);
-});
+  });
 }
 
 function loop() {
@@ -241,5 +234,3 @@ function loop() {
   draw();
   requestAnimationFrame(loop);
 }
-
-

@@ -3,42 +3,181 @@
 <head>
     <title>GAME2D</title>
     <link rel="stylesheet" href="/protected/styles/game.css">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            width: 1024px;
+            height: 576px;
+        }
+
+        canvas {
+            width: 1024px;
+            height: 576px;
+            display: block;
+            background-color: #000;
+        }
+
+        .healthBar, #gameOver, #characterSelectMenu {
+            position: absolute;
+            width: 100%;
+            z-index: 2;
+        }
+
+        #display {
+            text-align: center;
+            font-size: 2rem;
+            color: white;
+        }
+#gameOver {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.gameOverContent {
+    width: 1024px;
+    height: 200px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    opacity: 0;
+    transform: scale(0.5);
+    animation: splashOut 0.7s ease-out 0.4s forwards, fadeReveal 1s ease-in 1.1s forwards;
+}
+
+/* Fade in overlay */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Splash out (scale and opacity) */
+@keyframes splashOut {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Smooth fade of image (can delay or extend for effect) */
+@keyframes fadeReveal {
+    from {
+        background-size: 150%;
+        opacity: 0.5;
+    }
+    to {
+        background-size: contain;
+        opacity: 1;
+    }
+}
+
+
+        #restartbtn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: darkred;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #characterSelectMenu {
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            flex-direction: column;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #characterSelectMenu button {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            margin: 10px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #characterSelectMenu button:first-of-type {
+            background-color: crimson;
+        }
+
+        #characterSelectMenu button:last-of-type {
+            background-color: purple;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         
         <div class="healthBar">
-         <!--player1 health bar-->
-        <div style="position:relative; width:100%; height:50px; display:flex; justify-content: flex-end;">  
-        <div class="player1Health"></div>
-        <div id="player1H" style="position:absolute; background-color: limegreen; top:0;bottom:0;right:0;left:0; width:100%"></div>
+            <!-- Player 1 health bar -->
+            <div style="position:relative; width:100%; height:50px; display:flex; justify-content: flex-end;">
+                <div class="player1Health"></div>
+                <div id="player1H" style="position:absolute; background-color: limegreen; top:0; bottom:0; right:0; left:0; width:100%;"></div>
+            </div>
+
+            <div id="display">FIGHT!!</div>
+
+            <!-- Player 2 health bar -->
+            <div style="position:relative; width:100%; height:50px;">
+                <div class="player2Health"></div>
+                <div id="player2H" style="position:absolute; background-color: limegreen; top:0; right:0; left:0; bottom:0; width:100%;"></div>
+            </div>
         </div>
 
-        <div id="display">FIGHT!!</div>
-        
-        <!--player2 health bar-->
-        <div style="position:relative; height:50px; width:100%;">
-        <div class="player2Health"></div>
-        <div id="player2H" style="position:absolute; background:limegreen; top:0; right:0; left:0; bottom:0; width:100%;"> </div>
-    </div>
-        </div>
-        <div id="gameOver">
-            <div id="result">RESULT</div>
-            <button id="restartbtn">Restart</button>
-        </div>
-        <div id="characterSelectMenu" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    display: flex; align-items: center; justify-content: center; background-color: rgba(0, 0, 0, 0.8); z-index: 10; flex-direction: column; color: white; font-family: Arial, sans-serif;">
-    
-    <h2 style="margin-bottom: 20px; font-size: 2rem;">Choose Your Character</h2>
-    
-    <button onclick="selectCharacter('bruiser')" style="padding: 12px 30px; font-size: 1.2rem; margin: 10px; background-color: crimson; color: white; border: none; border-radius: 10px; cursor: pointer;">Bruiser</button>
-    
-    <button onclick="selectCharacter('assassin')" style="padding: 12px 30px; font-size: 1.2rem; margin: 10px; background-color: purple; color: white; border: none; border-radius: 10px; cursor: pointer;">Assassin</button>
+       <div id="gameOver">
+  <div class="gameOverContent">
+    <div id="resultText"></div>
+  </div>
 </div>
-       <canvas></canvas>
+        <div id="characterSelectMenu">
+            <h2 style="margin-bottom: 20px; font-size: 2rem;">Choose Your Character</h2>
+            <button onclick="selectCharacter('bruiser')">Bruiser</button>
+            <button onclick="selectCharacter('assassin')">Assassin</button>
+        </div>
+
+        <canvas></canvas>
     </div>
-      <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-      <script src = "/protected/scripts/classes.js"></script>
-      <script src="/protected/scripts/index.js"></script>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="/protected/scripts/classes.js"></script>
+    <script src="/protected/scripts/index.js"></script>
 </body>
 </html>

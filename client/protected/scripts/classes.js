@@ -8,12 +8,13 @@ class Character {
         this.id = id;
         this.isAttacking = false;
         this.facingDirection = 1; // 1 = right, -1 = left
-        this.hitPoints= 100; // Default hit points
+        this.hitPoints; // Default hit points
         this.gravity = 0.7;
         this.velocityY = 0; // Vertical velocity for gravity effect
         this.ground = canvas.height -10- this.height; // TODO make this dynamic
         this.specialActive = false;
-                this.specialTimer = null;
+        this.specialTimer = null;
+        this.hitsLanded=  0 ;
 
 
         this.attackBox = {
@@ -31,10 +32,16 @@ class Character {
     }
 
     draw(ctx) {
+      //character drawing
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
 
-        if (this.isAttacking) {
+        //attack box drawing
+        if (
+            this.isAttacking &&
+            this.attackBox.width > 0 &&
+            this.attackBox.height > 0 && !this.specialActive
+        ) {
             this.attackBox.position.x = this.x;
             this.attackBox.position.y = this.y;
 
@@ -46,6 +53,17 @@ class Character {
                 this.attackBox.height
             );
         }
+     else if (this.detonating && this.detonation) {
+      console.log("im drrawing orange")
+    ctx.fillStyle = "orange";
+    ctx.fillRect(
+        this.detonation.x,
+        this.detonation.y,
+        this.detonation.width,
+        this.detonation.height
+    );
+}
+        
     }
 
     gotHit(damage,attackerId) {
@@ -91,77 +109,73 @@ class Bruiser extends Character {
         this.attackBox.width = 50; // Wider attack box
         this.attackBox.height = this.height; // Taller attack box
         this.punchPower = 20; // Higher attack power
-        this.maxHp = 200;
+        this.hitPoints = 350;
+        this.maxHp = 350;
+        this.detonation;
+        this.detonating = false;
     }
-    
     activateSpecial(){
-        if(this.specialActive) return; 
-        //setting up boosts for special atk
-        this.specialActive = true;
-        //storing the original atributes
-        this._originalSpeed = this.speed;
-    this._originalAttackBox = {
-        width: this.attackBox.width,
-        height: this.attackBox.height,
-        offsetX: this.attackBox.offsetX,
-        offsetY: this.attackBox.offsetY
-    };
-        this.speed= 8;  //temporary speed boost
+      //temporary boosst
+      this.speed= 8;
+      this.specialActive = true;
+       this.specialTimer = setTimeout(()=>{
+        console.log("inside specialTimer")
+        this.detonating = false;
+    this.isAttacking = false;
+    this.specialActive = false;
+    this.speed= 4;
+    this.detonation = null;
+       },1000)
+       }
+      special(){
+        console.log("Im in special 1st line");
+        console.log("specialActive:", this.specialActive);
+console.log("isAttacking:", this.isAttacking);
+        if(!this.specialActive || !this.isAttacking) return;
+        console.log("Bruiser special activated!");
+          this.detonating = true;
+          this.isAttacking = true;
+const width = this.width * 3;   // Width of AoE (extends left & right)
+const height = this.height * 2; // Height of AoE (extends up & down)
 
-    this.attackBox.width = this.width * 2; // Wider area
-    this.attackBox.height = this.height * 1.5; // Taller area
-    this.attackBox.offsetX = -this.width / 2; // Centered
-    this.attackBox.offsetY = -this.height * 0.25;
+this.detonation = {
+  x: this.x + this.width / 2 - width / 2,   // Centered horizontally
+  y: this.y + this.height / 2 - height / 2, // Centered vertically
+  width: width,
+  height: height
+};
 
-    setTimeout(() => {
-        this.specialActive = false;
-        this.speed = this._originalSpeed;
-        this.attackBox.width = this._originalAttackBox.width;
-        this.attackBox.height = this._originalAttackBox.height;
-        this.attackBox.offsetX = this._originalAttackBox.offsetX;
-        this.attackBox.offsetY = this._originalAttackBox.offsetY;
-    }, 5000);
-}
-    special(ctx) {
-
-    if (!this.specialActive || this.isAttacking) return;
-
-    this.isAttacking = true;
-
-    // Little jump effect
-    this.velocityY = -8; // Adjust as needed
-
-    // Use the special attack box (already set by activateSpecial)
-    const atkBox = {
-        x: this.attackBox.position.x ,
-        y: this.attackBox.position.y,
-        width: this.attackBox.width,
-        height: this.attackBox.height
-    };
-
-    Object.values(otherPlayers).forEach(opponent => {
-        const opponentRect = {
-            id: opponent.id,
-            x: opponent.x,
-            y: opponent.y,
-            width: opponent.width,
-            height: opponent.height
-        };
-        if (isColliding(atkBox, opponentRect)) {
-            // Deal extra damage for special attack
-            socket.emit("hitTaken", {
-                targetId: opponent.id,
-                roomId,
-                attackPower: this.punchPower * 2 // or any special value
-            });
-        }
+        
+      Object.values(otherPlayers).forEach(opponent => {
+      const opponentRect = {
+        id: opponent.id,
+        x: opponent.x,
+        y: opponent.y,
+        width: opponent.width,
+        height: opponent.height
+      };
+      console.log("Checking collision with opponent");
+      if (isColliding(this.detonation, opponentRect)) {
+      
+        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower: 80 });
+      }
+    
     });
-
-    // Attack animation duration (shorter than special duration)
+    clearTimeout(this.specialTimer);
     setTimeout(() => {
-        this.isAttacking = false;
-    }, 600); // Adjust as needed
-}
+    console.log("Bruiser special ended");
+    this.detonating = false;
+    this.isAttacking = false;
+    this.specialActive = false;
+    this.speed= 4;
+    this.detonation = null;
+}, 300); 
+       
+          
+
+        
+      }
+
 
     attack (ctx, type){
         if (this.isAttacking) return; // Prevent multiple attacks at once
@@ -171,11 +185,11 @@ class Bruiser extends Character {
             return;
         }
          else if (type!="basic") return;
-         const atkBox = {
-      x: player.attackBox.position.x + player.attackBox.offsetX,
-      y: player.attackBox.position.y + player.attackBox.offsetY,
-      width: player.attackBox.width,
-      height: player.attackBox.height
+      const atkBox = {
+      x: this.attackBox.position.x + this.attackBox.offsetX,
+      y: this.attackBox.position.y + this.attackBox.offsetY,
+      width: this.attackBox.width,
+      height: this.attackBox.height
     };
     Object.values(otherPlayers).forEach(opponent => {
       const opponentRect = {
@@ -186,7 +200,8 @@ class Bruiser extends Character {
         height: opponent.height
       };
       if (isColliding(atkBox, opponentRect)) {
-        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.punchPower });
+        this.hitsLanded++;
+        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  this.punchPower });
       }
     
     });
@@ -212,11 +227,12 @@ class Assassin extends Character {
         this.type = "Assassin";
         this.attackBox.offsetY = 20;
         this.basic = 10;
+        this.hitPoints = 160;
         this.dashPower;
         this.atkBox;
         // Dash special state
         this.dashAvailable = 0;
-        this.maxHp = 90;
+        this.maxHp = 160;
     }
 
     activateSpecial() {
@@ -303,10 +319,10 @@ class Assassin extends Character {
 
         //activate attack box here
        this.atkBox = {
-      x: player.attackBox.position.x + player.attackBox.offsetX,
-      y: player.attackBox.position.y + player.attackBox.offsetY,
-      width: player.attackBox.width,
-      height: player.attackBox.height
+      x: this.attackBox.position.x + this.attackBox.offsetX,
+      y: this.attackBox.position.y + this.attackBox.offsetY,
+      width: this.attackBox.width,
+      height: this.attackBox.height
     };
     Object.values(otherPlayers).forEach(opponent => {
       const opponentRect = {
@@ -317,8 +333,9 @@ class Assassin extends Character {
         height: opponent.height
       };
     
-      if (isColliding(atkBox, opponentRect)) {
-        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  player.basic });
+      if (isColliding(this.atkBox, opponentRect)) {
+        this.hitsLanded++;
+        socket.emit("hitTaken", { targetId: opponent.id, roomId,  attackPower:  this.basic });
       }
     });
       setTimeout(() => {
@@ -333,8 +350,6 @@ class Assassin extends Character {
     }
     
     }
-       
-      
 } 
 
 
