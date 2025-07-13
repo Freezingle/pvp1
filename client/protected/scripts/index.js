@@ -1,16 +1,18 @@
+// index.js (rewritten to support actual class instances for opponents)
+
 const socket = io();
 
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 canvas.width = 1024;
-canvas.height =576;
+canvas.height = 576;
 
 let player = null;
 let gameEnded = false;
 
 roomId = new URLSearchParams(window.location.search).get("room");
 
-function generateFramePath (folderPath, frameCount, filePrefix = "frame", extension = "png") {
+function generateFramePath(folderPath, frameCount, filePrefix = "frame", extension = "png") {
   const frames = [];
   for (let i = 1; i <= frameCount; i++) {
     frames.push(`${folderPath}/${filePrefix}${i}.${extension}`);
@@ -18,11 +20,11 @@ function generateFramePath (folderPath, frameCount, filePrefix = "frame", extens
   return frames;
 }
 
-function generateRandomSpawn(playerWidth, playerHeight){
-    const margin = 20;
-    const x = Math.floor(Math.random() * (canvas.width - playerWidth - margin * 2)) + margin;
-    const y = canvas.height - playerHeight - 20;
-    return { x, y };
+function generateRandomSpawn(playerWidth, playerHeight) {
+  const margin = 20;
+  const x = Math.floor(Math.random() * (canvas.width - playerWidth - margin * 2)) + margin;
+  const y = canvas.height - playerHeight - 20;
+  return { x, y };
 }
 
 function isColliding(rect1, rect2) {
@@ -50,7 +52,7 @@ async function fetchUserInfo() {
   }
 }
 
-const otherPlayers = {}; // id -> player object
+const otherPlayers = {}; // id -> Character/Bruiser/Assassin instance
 
 function selectCharacter(type) {
   const menu = document.getElementById("characterSelectMenu");
@@ -77,7 +79,8 @@ function startGame() {
     hitPoints: player.hitPoints,
     color: player.color,
     hitsLanded: player.hitsLanded,
-    username: player.username || "Player"
+    username: player.username || "Player",
+    type: player.type
   });
 
   socket.on("roomFull", (msg) => {
@@ -86,19 +89,24 @@ function startGame() {
 
   socket.on("currentPlayers", (players) => {
     players.forEach(p => {
-      otherPlayers[p.id] = { ...p };
+      if (p.id !== socket.id) {
+        createOpponentInstance(p);
+      }
     });
   });
 
   socket.on("newPlayer", (p) => {
-    otherPlayers[p.id] = { ...p };
+    if (p.id !== socket.id) {
+      createOpponentInstance(p);
+    }
   });
 
   socket.on("opponentMove", (p) => {
-    if (otherPlayers[p.id]) {
-      otherPlayers[p.id].x = p.x;
-      otherPlayers[p.id].y = p.y;
-      otherPlayers[p.id].hitsLanded = p.hitsLanded || 0;
+    const opponent = otherPlayers[p.id];
+    if (opponent) {
+      opponent.x = p.x;
+      opponent.y = p.y;
+      opponent.hitsLanded = p.hitsLanded || 0;
     }
   });
 
@@ -133,6 +141,21 @@ function startGame() {
   });
 
   loop();
+}
+
+function createOpponentInstance(p) {
+  let opponent;
+  if (p.type === "bruiser") {
+    opponent = new Bruiser(p.x, p.y, p.color, p.width, p.height, p.id);
+  } else if (p.type === "assassin") {
+    opponent = new Assassin(p.x, p.y, p.color, p.width, p.height, p.id);
+  } else {
+    opponent = new Character(p.x, p.y, p.color, p.width, p.height, p.id);
+  }
+  opponent.username = p.username;
+  opponent.hitsLanded = p.hitsLanded;
+  opponent.hitPoints = p.hitPoints;
+  otherPlayers[p.id] = opponent;
 }
 
 const keys = {};
@@ -185,9 +208,11 @@ function update() {
     roomId,
     x: player.x,
     y: player.y,
-    hitsLanded: player.hitsLanded
+    hitsLanded: player.hitsLanded,
+    facingDirection: player.facingDirection
   });
 }
+
 function drawBar(ctx, x, y, width, height, percent, bgColor, fillColor) {
   ctx.fillStyle = bgColor;
   ctx.fillRect(x, y, width, height);
@@ -205,13 +230,11 @@ function draw() {
   background.draw(ctx, performance.now());
   player.draw(ctx);
 
-  // === CONSTANTS for UI layout ===
   const barWidth = 80;
   const barHeight = 6;
   const barGap = 4;
   const textGap = 18;
 
-  // === Draw player username or SPECIAL text ===
   ctx.font = "bold 16px 'Orbitron', sans-serif";
   ctx.fillStyle = player.hitsLanded >= 5 && !player.specialActive ? "gold" : "white";
   ctx.textAlign = "center";
@@ -221,51 +244,40 @@ function draw() {
     player.y - textGap
   );
 
-  // === Player bars ===
   const playerBarX = player.x + player.width / 2 - barWidth / 2;
   const playerBarY = player.y - textGap - barGap - barHeight * 2;
 
   drawBar(ctx, playerBarX, playerBarY, barWidth, barHeight, player.hitPoints / player.maxHp, "#333", "limegreen");
   drawBar(ctx, playerBarX, playerBarY + barHeight + barGap, barWidth, barHeight, player.stamina / player.maxStamina, "#333", "gold");
 
-  // === Draw your hits info ===
   ctx.font = "20px Orbitron, monospace";
   ctx.fillStyle = "white";
   ctx.textAlign = "start";
   ctx.fillText(`Your Hits: ${player.hitsLanded}`, 20, 40);
 
-  // === Draw enemies ===
-  Object.values(otherPlayers).forEach((p, index) => {
-    // Body
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, p.width, p.height);
+  Object.values(otherPlayers).forEach((opponent, index) => {
+    opponent.draw(ctx);
 
-    // Username
     ctx.font = "bold 16px 'Orbitron', sans-serif";
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
-    ctx.fillText(p.username || "Enemy", p.x + p.width / 2, p.y - textGap);
+    ctx.fillText(opponent.username || "Enemy", opponent.x + opponent.width / 2, opponent.y - textGap);
 
-    // Bars (above enemy)
-    const enemyBarX = p.x + p.width / 2 - barWidth / 2;
-    const enemyBarY = p.y - textGap - barGap - barHeight * 2;
+    const enemyBarX = opponent.x + opponent.width / 2 - barWidth / 2;
+    const enemyBarY = opponent.y - textGap - barGap - barHeight * 2;
 
-    drawBar(ctx, enemyBarX, enemyBarY, barWidth, barHeight, p.hitPoints / p.maxHp, "#333", "limegreen");
-    drawBar(ctx, enemyBarX, enemyBarY + barHeight + barGap, barWidth, barHeight, p.stamina / p.maxStamina, "#333", "gold");
+    drawBar(ctx, enemyBarX, enemyBarY, barWidth, barHeight, opponent.hitPoints / opponent.maxHp, "#333", "limegreen");
+    drawBar(ctx, enemyBarX, enemyBarY + barHeight + barGap, barWidth, barHeight, opponent.stamina / opponent.maxStamina, "#333", "gold");
 
-    // Hits Info (optional, per enemy)
     ctx.font = "16px Orbitron, monospace";
     ctx.textAlign = "start";
-    ctx.fillText(`Enemy Hits: ${p.hitsLanded || 0}`, 20, 70 + index * 30);
+    ctx.fillText(`Enemy Hits: ${opponent.hitsLanded || 0}`, 20, 70 + index * 30);
   });
 
-  // Update direction toward nearest enemy
-  Object.values(otherPlayers).forEach((p) => {
-    player.updateAttackDirection(p.x);
+  Object.values(otherPlayers).forEach((opponent) => {
+    player.updateAttackDirection(opponent.x);
   });
 }
-
-
 
 function loop() {
   update();

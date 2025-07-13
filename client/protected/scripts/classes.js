@@ -251,10 +251,10 @@ class Assassin extends Character {
         this.attackBox.offsetY = 20;
         this.basic = 10;
         this.hitPoints = 160;
-        this.dashPower;
-        this.atkBox;
-        // Dash special state
         this.dashAvailable = 0;
+        this.isDashing = false;
+        this.specialActive = false;
+        this.specialTimer = null;
         this.maxHp = 160;
     }
 
@@ -262,121 +262,122 @@ class Assassin extends Character {
         if (this.specialActive) return;
         this.specialActive = true;
         this.dashAvailable = 2;
-        // End special after 5 seconds
+
+        // After 5s, disable dashAvailable and specialActive if not used
         this.specialTimer = setTimeout(() => {
             this.specialActive = false;
             this.dashAvailable = 0;
         }, 5000);
     }
 
-   special() {
-    if (!this.specialActive || this.dashAvailable <= 0 || this.isDashing) return;
+    special() {
+        if (!this.specialActive || this.dashAvailable <= 0 || this.isDashing) return;
 
-    this.isDashing = true;
-    this.dashAvailable--;
+        this.isDashing = true;
+        this.dashAvailable--;
 
-    const startX = this.x;
-    const endX = this.facingDirection === 1
-        ? Math.min(canvas.width - this.width, this.x + 400)
-        : Math.max(0, this.x - 400); // Dash only up to 400px to prevent offscreen
+        const startX = this.x;
+        const endX = this.facingDirection === 1
+            ? Math.min(canvas.width - this.width, this.x + 400)
+            : Math.max(0, this.x - 400);
 
-    const distance = endX - startX;
-    const duration = 200; // ms
-    const startTime = performance.now();
+        const distance = endX - startX;
+        const duration = 200; // ms
+        const startTime = performance.now();
 
-    const dashStep = (now) => {
-        const elapsed = now - startTime;
-        let progress = Math.min(elapsed / duration, 1);
-        this.x = startX + distance * progress;
+        const dashStep = (now) => {
+            const elapsed = now - startTime;
+            let progress = Math.min(elapsed / duration, 1);
+            this.x = startX + distance * progress;
 
-        // Check collisions on each frame
-        Object.values(otherPlayers).forEach(opponent => {
-            const opponentRect = {
-                x: opponent.x,
-                y: opponent.y,
-                width: opponent.width,
-                height: opponent.height
-            };
-            const assassinRect = {
-                x: this.x,
-                y: this.y,
-                width: this.width,
-                height: this.height
-            };
-            if (isColliding(assassinRect, opponentRect)) {
-                const damage = opponent.maxHp ? opponent.maxHp * 0.5 : 50;
-                socket.emit("hitTaken", {
-                    targetId: opponent.id,
-                    roomId,
-                    attackPower: damage
-                });
-            }
-        });
+            Object.values(otherPlayers).forEach(opponent => {
+                const opponentRect = {
+                    x: opponent.x,
+                    y: opponent.y,
+                    width: opponent.width,
+                    height: opponent.height
+                };
+                const assassinRect = {
+                    x: this.x,
+                    y: this.y,
+                    width: this.width,
+                    height: this.height
+                };
+                if (isColliding(assassinRect, opponentRect)) {
+                    const damage = opponent.maxHp ? opponent.maxHp * 0.5 : 50;
+                    socket.emit("hitTaken", {
+                        targetId: opponent.id,
+                        roomId,
+                        attackPower: damage
+                    });
+                }
+            });
 
-        if (progress < 1) {
-            requestAnimationFrame(dashStep);
-        } else {
-            this.isDashing = false;
+            if (progress < 1) {
+                requestAnimationFrame(dashStep);
+            } else {
+                this.isDashing = false;
 
-            // Auto-disable after 5s or 2 dashes
-            if (this.dashAvailable <= 0) {
+                // *** HERE is the key ***
+                // Once dash ends, allow basic attacks again:
                 this.specialActive = false;
+
+                // Clear the timeout since we ended early:
                 clearTimeout(this.specialTimer);
+                this.dashAvailable = 0;
             }
-        }
-    };
-
-    requestAnimationFrame(dashStep);
-}
-
-
- attack(ctx, type) {
-    if (type === "special") {
-        this.special(); // call special dash
-        return;
-    }
-
-    if (this.isAttacking || this.isDashing) return;
-
-    this.isAttacking = true;
-
-    if (type === "basic") {
-        this.attackBox.width = 25;
-        this.attackBox.height = 14;
-
-        const atkBox = {
-            x: this.attackBox.position.x + this.attackBox.offsetX,
-            y: this.attackBox.position.y + this.attackBox.offsetY,
-            width: this.attackBox.width,
-            height: this.attackBox.height
         };
 
-        Object.values(otherPlayers).forEach(opponent => {
-            const opponentRect = {
-                id: opponent.id,
-                x: opponent.x,
-                y: opponent.y,
-                width: opponent.width,
-                height: opponent.height
+        requestAnimationFrame(dashStep);
+    }
+
+    attack(ctx, type) {
+        if (type === "special") {
+            this.special();
+            return;
+        }
+
+        // Block basic attacks only if special is active AND NOT dashing
+        if (this.isAttacking || this.isDashing || this.specialActive) return;
+
+        this.isAttacking = true;
+
+        if (type === "basic") {
+            this.attackBox.width = 25;
+            this.attackBox.height = 14;
+
+            const atkBox = {
+                x: this.attackBox.position.x + this.attackBox.offsetX,
+                y: this.attackBox.position.y + this.attackBox.offsetY,
+                width: this.attackBox.width,
+                height: this.attackBox.height
             };
 
-            if (isColliding(atkBox, opponentRect)) {
-                this.hitsLanded++;
-                socket.emit("hitTaken", {
-                    targetId: opponent.id,
-                    roomId,
-                    attackPower: this.basic
-                });
-            }
-        });
+            Object.values(otherPlayers).forEach(opponent => {
+                const opponentRect = {
+                    id: opponent.id,
+                    x: opponent.x,
+                    y: opponent.y,
+                    width: opponent.width,
+                    height: opponent.height
+                };
 
-        setTimeout(() => {
-            this.isAttacking = false;
-        }, 500);
+                if (isColliding(atkBox, opponentRect)) {
+                    this.hitsLanded++;
+                    socket.emit("hitTaken", {
+                        targetId: opponent.id,
+                        roomId,
+                        attackPower: this.basic
+                    });
+                }
+            });
+
+            setTimeout(() => {
+                this.isAttacking = false;
+            }, 500);
+        }
     }
 }
-
-} 
 
 
 class  BackgroundSprite {
