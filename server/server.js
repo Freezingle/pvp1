@@ -169,12 +169,11 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("newPlayer", { id: socket.id, ...player });
   });
 
-  socket.on("playerUpdate", ({ roomId, x, y, hitsLanded, facingDirection }) => {
+  socket.on("playerUpdate", ({ roomId, x, y, hitsLanded }) => {
     if (rooms[roomId] && rooms[roomId][socket.id]) {
       rooms[roomId][socket.id].x = x;
       rooms[roomId][socket.id].y = y;
       rooms[roomId][socket.id].hitsLanded = hitsLanded;
-      rooms[roomId][socket.id].facingDirection = facingDirection;
 
       io.to(roomId).emit("opponentMove", { id: socket.id, x, y, hitsLanded });
     }
