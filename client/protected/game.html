@@ -38,85 +38,80 @@
             font-size: 2rem;
             color: white;
         }
+
         @keyframes splashyZoom {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-#gameOver {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 999;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: none;
-    justify-content: center;
-    align-items: center;
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
 
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
+        #gameOver {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            animation: splashyZoom 0.6s ease-out forwards;
+        }
 
-    animation: splashyZoom 0.6s ease-out forwards;
-}
+        .gameOverContent {
+            width: 1024px;
+            height: 200px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transform: scale(0.5);
+            animation: splashOut 0.7s ease-out 0.4s forwards, fadeReveal 1s ease-in 1.1s forwards;
+        }
 
-.gameOverContent {
-    width: 1024px;
-    height: 200px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
 
-    opacity: 0;
-    transform: scale(0.5);
-    animation: splashOut 0.7s ease-out 0.4s forwards, fadeReveal 1s ease-in 1.1s forwards;
-}
+        @keyframes splashOut {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
 
-/* Fade in overlay */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Splash out (scale and opacity) */
-@keyframes splashOut {
-    from {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-/* Smooth fade of image (can delay or extend for effect) */
-@keyframes fadeReveal {
-    from {
-        background-size: 150%;
-        opacity: 0.5;
-    }
-    to {
-        background-size: contain;
-        opacity: 1;
-    }
-}
-
+        @keyframes fadeReveal {
+            from {
+                background-size: 150%;
+                opacity: 0.5;
+            }
+            to {
+                background-size: contain;
+                opacity: 1;
+            }
+        }
 
         #restartbtn {
             margin-top: 10px;
@@ -128,26 +123,27 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        #resultText {
-    position: absolute;
-    top: 60%; /* 👈 Push it lower relative to container */
-    transform: translateY(-50%);
-    font-size: 36px;
-    color: white;
-    animation: pulse 1.5s infinite;
-    text-shadow: 0 0 10px #fff, 0 0 20px gold, 0 0 30px orange;
-}
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0.8;
-  }
-}
+        #resultText {
+            position: absolute;
+            top: 60%;
+            transform: translateY(-50%);
+            font-size: 36px;
+            color: white;
+            animation: pulse 1.5s infinite;
+            text-shadow: 0 0 10px #fff, 0 0 20px gold, 0 0 30px orange;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.8;
+            }
+        }
 
         #characterSelectMenu {
             top: 0;
@@ -164,21 +160,28 @@
             font-family: Arial, sans-serif;
         }
 
-        #characterSelectMenu button {
+        /* Buttons container will have flex wrap to handle many buttons nicely */
+        #characterButtonsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            max-width: 600px;
+        }
+
+        /* We set common button styles here, colors are inline from JS */
+        #characterButtonsContainer button {
             padding: 12px 30px;
             font-size: 1.2rem;
-            margin: 10px;
+            margin: 10px 0;
             border: none;
             border-radius: 10px;
             cursor: pointer;
+            color: white;
+            transition: transform 0.15s ease-in-out;
         }
-
-        #characterSelectMenu button:first-of-type {
-            background-color: crimson;
-        }
-
-        #characterSelectMenu button:last-of-type {
-            background-color: purple;
+        #characterButtonsContainer button:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
@@ -202,14 +205,13 @@
         </div>
 
        <div id="gameOver">
-  <div class="gameOverContent">
-    <div id="resultText"></div>
-  </div>
-</div>
+          <div class="gameOverContent">
+            <div id="resultText"></div>
+          </div>
+        </div>
         <div id="characterSelectMenu">
             <h2 style="margin-bottom: 20px; font-size: 2rem;">Choose Your Character</h2>
-            <button onclick="selectCharacter('bruiser')">Bruiser</button>
-            <button onclick="selectCharacter('assassin')">Assassin</button>
+            <div id="characterButtonsContainer"></div>
         </div>
 
         <canvas></canvas>
@@ -217,6 +219,36 @@
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="/protected/scripts/classes.js"></script>
+    
+    <script>
+        // Dynamic character list with colors — add more here when needed
+        const characters = {
+            "bruiser": "crimson",
+            "assassin": "purple",
+            "sniper": "darkblue",
+            
+        };
+
+        const characterButtonsContainer = document.getElementById('characterButtonsContainer');
+
+        Object.entries(characters).forEach(([characterName, color]) => {
+            const button = document.createElement('button');
+            button.textContent = characterName.charAt(0).toUpperCase() + characterName.slice(1);
+            button.style.backgroundColor = color;
+            button.onclick = () => selectCharacter(characterName);
+            characterButtonsContainer.appendChild(button);
+        });
+
+        // Dummy selectCharacter function to avoid errors — replace with your actual logic
+        function selectCharacter(character) {
+            console.log("Selected character:", character);
+            // Hide the character select menu after selection
+            document.getElementById("characterSelectMenu").style.display = "none";
+
+            // Your logic to spawn/load the character goes here
+        }
+    </script>
+
     <script src="/protected/scripts/index.js"></script>
 </body>
 </html>
