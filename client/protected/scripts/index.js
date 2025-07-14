@@ -171,9 +171,10 @@ window.addEventListener("keydown", (e) => {
   if (key === "e") {
     if (player.hitsLanded >= 5 && !player.specialActive) {
       attackType = "special";
+      player.hitsLanded = 0;
       enableAttack = true;
       specialReady = true;
-      player.hitsLanded = 0;
+      
     }
   } else if (key === "c") {
     if (specialReady && player.specialActive) {
@@ -208,8 +209,7 @@ function update() {
     roomId,
     x: player.x,
     y: player.y,
-    hitsLanded: player.hitsLanded,
-    facingDirection: player.facingDirection
+    hitsLanded: player.hitsLanded
   });
 }
 
