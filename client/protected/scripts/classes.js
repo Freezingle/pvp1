@@ -110,7 +110,7 @@ class Bruiser extends Character {
     constructor(x, y, color, width, height, id) {
         super(x, y, color, width, height, id);
         this.speed = 4;
-        this.type = "Bruiser";
+        this.type = "bruiser";
         this.attackBox.width = 50;
         this.attackBox.height = this.height;
         this.punchPower = 20;
@@ -213,7 +213,7 @@ class Assassin extends Character {
     constructor(x, y, color, width, height, id) {
         super(x, y, color, width, height, id);
         this.speed = 10;
-        this.type = "Assassin";
+        this.type = "assassin";
         this.attackBox.offsetY = 20;
         this.basic = 10;
         this.hitPoints = 160;
@@ -303,15 +303,14 @@ class Assassin extends Character {
 
     attack(ctx, type) {
         console.log("inside attack of assasin")
+
+        if (this.isAttacking) return;
+        this.isAttacking = true;
         if (type === "special") {
             console.log("type === special")
             this.activateSpecial(); //activating special
             return;
         }
-
-        if (this.isAttacking || this.isDashing) return;
-
-        this.isAttacking = true;
 
         if (type === "basic") {
                         console.log("type === basic")
@@ -351,6 +350,108 @@ class Assassin extends Character {
         }
     }
 }
+
+
+class Sniper extends Character {
+    constructor(x, y, color, width, height, id) {
+        super(x, y, color, width, height, id);
+        this.type = "sniper";
+        this.aimAngle = 0;
+        this.gunLength = 40;
+        this.mouseX = 0;
+        this.mouseY = 0;
+    }
+
+    updateAim(globalMouse) {
+        const dx = globalMouse.x - (this.x + this.width / 2);
+        const dy = globalMouse.y - (this.y + this.height / 2);
+        this.aimAngle = Math.atan2(dy, dx);
+    }
+
+    attack(ctx, type) {
+        if (this.isAttacking) return;
+        this.isAttacking = true;
+
+        const bulletX = this.x + this.width / 2 + this.gunLength * Math.cos(this.aimAngle);
+        const bulletY = this.y + this.height / 2 + this.gunLength * Math.sin(this.aimAngle);
+
+        if (type === "special") {
+          /*  Object.values(otherPlayers).forEach(opponent => {
+                const opponentCenterX = opponent.x + opponent.width / 2;
+                const opponentCenterY = opponent.y + opponent.height / 2;
+
+                const dx = opponentCenterX - bulletX;
+                const dy = opponentCenterY - bulletY;
+                const distance = Math.hypot(dx, dy);
+
+                if (distance < 30) {  // Adjust hitbox as needed
+                    socket.emit("applySlowAndDot", {
+                        targetId: opponent.id,
+                        roomId,
+                        duration: 3000,        // 3 seconds slow
+                        slowFactor: 0.4,       // 60% slow
+                        dotDamage: 5,
+                        dotInterval: 500
+                    });
+                }
+            });
+
+            setTimeout(() => {
+                this.isAttacking = false;
+            }, 500); // Special attack cooldown
+
+            return;*/
+            console.log("inside activate special/ special of sniper class")
+        }
+
+        if (type === "basic") {
+            Object.values(otherPlayers).forEach(opponent => {
+                const opponentCenterX = opponent.x + opponent.width / 2;
+                const opponentCenterY = opponent.y + opponent.height / 2;
+
+                const dx = opponentCenterX - bulletX;
+                const dy = opponentCenterY - bulletY;
+                const distance = Math.hypot(dx, dy);
+
+                if (distance < 30) {  // Instant-hit sniper shot
+                    this.hitsLanded++;
+                    socket.emit("hitTaken", {
+                        targetId: opponent.id,
+                        roomId,
+                        attackPower: 25
+                    });
+                }
+            });
+
+            setTimeout(() => {
+                this.isAttacking = false;
+            }, 300); // Basic attack cooldown
+
+            return;
+        }
+
+        // Fallback safety
+        this.isAttacking = false;
+    }
+
+    draw(ctx) {
+        super.draw(ctx);
+
+        const startX = this.x + this.width / 2;
+        const startY = this.y + this.height / 2;
+        const endX = startX + this.gunLength * Math.cos(this.aimAngle);
+        const endY = startY + this.gunLength * Math.sin(this.aimAngle);
+
+        ctx.strokeStyle = "yellow";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+    }
+}
+
+
 
  
 class BackgroundSprite {

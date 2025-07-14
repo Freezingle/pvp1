@@ -65,6 +65,11 @@ function selectCharacter(type) {
     const spawn = generateRandomSpawn(40, 120);
     player = new Assassin(spawn.x, spawn.y, "red", 40, 120, socket.id);
   }
+  else if( type === "sniper")
+  {
+    const spawn = generateRandomSpawn (30,100);
+    player = new Sniper (spawn.x, spawn.y, "black", 90,100, socket.id )
+  }
   fetchUserInfo().then(startGame);
 }
 
@@ -149,7 +154,7 @@ function createOpponentInstance(p) {
     opponent = new Bruiser(p.x, p.y, p.color, p.width, p.height, p.id);
   } else if (p.type === "assassin") {
     opponent = new Assassin(p.x, p.y, p.color, p.width, p.height, p.id);
-  } else {
+  } else if (p.type ==="sniper"){
     opponent = new Character(p.x, p.y, p.color, p.width, p.height, p.id);
   }
   opponent.username = p.username;
