@@ -12,6 +12,9 @@ let gameEnded = false;
 
 roomId = new URLSearchParams(window.location.search).get("room");
 
+
+
+
 function generateFramePath(folderPath, frameCount, filePrefix = "frame", extension = "png") {
   const frames = [];
   for (let i = 1; i <= frameCount; i++) {
@@ -68,7 +71,7 @@ function selectCharacter(type) {
   else if( type === "sniper")
   {
     const spawn = generateRandomSpawn (30,100);
-    player = new Sniper (spawn.x, spawn.y, "black", 90,100, socket.id )
+    player = new Sniper (spawn.x, spawn.y, "black", 20,100, socket.id )
   }
   fetchUserInfo().then(startGame);
 }
@@ -155,7 +158,7 @@ function createOpponentInstance(p) {
   } else if (p.type === "assassin") {
     opponent = new Assassin(p.x, p.y, p.color, p.width, p.height, p.id);
   } else if (p.type ==="sniper"){
-    opponent = new Character(p.x, p.y, p.color, p.width, p.height, p.id);
+    opponent = new Sniper (p.x, p.y, p.color, p.width, p.height, p.id);
   }
   opponent.username = p.username;
   opponent.hitsLanded = p.hitsLanded;
@@ -197,6 +200,13 @@ window.addEventListener("mousedown", (e) => {
   if (e.button === 0 && !gameEnded) {
     attackType = "basic";
     enableAttack = true;
+  }
+});
+//this event will be listened even when the character isnt sniper but this doesnt create performance overhead because its just updating mouse positions nothign too fancy
+window.addEventListener("mousemove", (e) => {
+  if (player?.type === "sniper") {
+    const rect = canvas.getBoundingClientRect();
+    player.updateAim({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   }
 });
 
