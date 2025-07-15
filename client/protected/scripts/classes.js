@@ -357,6 +357,7 @@ class Sniper extends Character {
         super(x, y, color, width, height, id);
         this.type = "sniper";
         this.aimAngle = 0;
+        this.speed = 20;
         this.gunLength = 40;
         this.mouseX = 0;
         this.mouseY = 0;
